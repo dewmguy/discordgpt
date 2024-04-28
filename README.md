@@ -4,21 +4,29 @@
 
 This app integrates various services including Discord, Airtable, and OpenAI to create an advanced bot that can handle complex interactions within Discord servers. It utilizes the Discord.js library to interact with Discord's API, Airtable for storing and managing data, and OpenAI's API for processing and responding to user messages.
 
+### OpenAI Assistants API Integration
+
+This app is integrated with the OpenAI Assistants API, allowing the Discord bot to utilize advanced AI models for processing and responding to messages with enhanced accuracy and contextual awareness. The use of OpenAI's Assistants API significantly improves the bot's responsiveness and interaction quality, enabling more human-like conversations within Discord.
+
 ## How to Use
 
-1. **Starting the Bot:**
+1. **Configure your Assistant**
+   - Log into the OpenAI platform and create a new assistant and configure it with your preferred model, instructions, and other options. (currently does not support function calling.)
+   - Obtain the `Assistant ID` from the assistant settings and include it in the environment variables as `OPENAI_ASSISTANTID`.
+
+2. **Starting the Bot:**
    - Ensure all necessary dependencies are installed by running `npm install openai discord.js dotenv airtable`
    - Start the bot with `node index.js` (assuming your main file is named `index.js`).
    - Recommend using tmux to keep the bot running in the background
 
-2. **Interacting with the Bot:**
+3. **Interacting with the Bot:**
    - The bot listens for direct mentions in a Discord server.
    - Once mentioned, it processes the message and uses OpenAI's capabilities to generate a response based on the content.
    - The bot can handle messages sequentially by locking threads to manage multiple interactions concurrently.
 
-3. **Handling Errors and Outputs:**
+4. **Handling Errors and Outputs:**
    - The bot handles errors gracefully by notifying the user of any issues encountered during the interaction.
-   - Responses from the bot are split as needed to fit Discord's message length constraints.
+   - Responses from the bot are split as needed to fit Discord's message length constraints. 
 
 ## Environment Variables
 

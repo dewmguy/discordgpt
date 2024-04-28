@@ -7,8 +7,9 @@ This app integrates various services including Discord, Airtable, and OpenAI to 
 ## How to Use
 
 1. **Starting the Bot:**
-   - Ensure all necessary dependencies are installed by running `npm install`.
+   - Ensure all necessary dependencies are installed by running `npm install openai discord.js dotenv airtable`
    - Start the bot with `node index.js` (assuming your main file is named `index.js`).
+   - Recommend using tmux to keep the bot running in the background
 
 2. **Interacting with the Bot:**
    - The bot listens for messages that directly mention it in a Discord server.

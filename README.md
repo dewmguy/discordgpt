@@ -1,4 +1,4 @@
-# App Description and Usage
+# DiscordGPT Description and Usage
 
 ## Description
 
@@ -12,7 +12,7 @@ This app integrates various services including Discord, Airtable, and OpenAI to 
    - Recommend using tmux to keep the bot running in the background
 
 2. **Interacting with the Bot:**
-   - The bot listens for messages that directly mention it in a Discord server.
+   - The bot listens for direct mentions in a Discord server.
    - Once mentioned, it processes the message and uses OpenAI's capabilities to generate a response based on the content.
    - The bot can handle messages sequentially by locking threads to manage multiple interactions concurrently.
 

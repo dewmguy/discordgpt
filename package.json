@@ -1,0 +1,30 @@
+{
+  "name": "discordgpt",
+  "version": "1.0.0",
+  "description": "A Discord Bot application that connects to OpenAI Assistants API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dewmguy/discordgpt.git"
+  },
+  "keywords": [
+    "openai",
+    "discord",
+    "chatgpt"
+  ],
+  "author": "Jeremy Tilden",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dewmguy/discordgpt/issues"
+  },
+  "homepage": "https://github.com/dewmguy/discordgpt#readme",
+  "dependencies": {
+    "airtable": "^0.12.2",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.5",
+    "openai": "^4.38.5"
+  }
+}

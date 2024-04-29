@@ -1,5 +1,6 @@
 //assistant bot
 require('dotenv').config();
+const toolbox = require("./functions.js");
 
 //discord
 const { Client, Events, GatewayIntentBits } = require('discord.js');
@@ -31,26 +32,35 @@ async function updateBotStatus(statusType, activityType, statusName) {
 }
 
 async function findSplit(content, start, end) {
-  let inMarkdown = false;
   let lastSafeIndex = start;
   let foundSentenceEnd = false;
+  let inCodeBlock = false;
+  let inParentheses = false;
+  let inQuotes = false;
+  let quoteChar = '';
   for (let i = end; i > start; i--) {
     const char = content[i];
-    if (['.', '?', '!'].includes(char)) {
-      lastSafeIndex = i + 1;
-      foundSentenceEnd = true;
-      break;
+    const prevChar = i > 0 ? content[i - 1] : '';
+    const nextChar = i < content.length - 1 ? content[i + 1] : '';
+    if (char === '`' || char === "'") {
+      if (content.substring(i - 2, i + 1) === '```' || content.substring(i - 2, i + 1) === "'''") {
+        inCodeBlock = !inCodeBlock;
+        i -= 2; // Skip the next two characters since they are part of the block syntax
+        continue;
+      }
     }
-    if (!foundSentenceEnd && /[\s,;:()'"`]/.test(char)) {
-      lastSafeIndex = i + 1;
-      continue;
-    }
-    if (['*', '_', '`', '~'].includes(char)) {
-      if(!inMarkdown) { lastSafeIndex = foundSentenceEnd ? lastSafeIndex : i; inMarkdown = true; }
-      else { inMarkdown = false; }
-    }
+    if (char === '(') { inParentheses = true; }
+    else if (char === ')' && inParentheses) { inParentheses = false; }
+    if ((char === '"' || char === "'") && !inQuotes) { inQuotes = true; quoteChar = char; } // Avoid splitting inside quotes
+    else if (char === quoteChar && inQuotes) { inQuotes = false; quoteChar = ''; }
+    if (!inCodeBlock && !inParentheses && !inQuotes && ['.', '?', '!'].includes(char)) { lastSafeIndex = i + 1; foundSentenceEnd = true; break; }
+    if (!foundSentenceEnd && !inCodeBlock && !inParentheses && !inQuotes && /[\s,;:()'"`]/.test(char)) { lastSafeIndex = i + 1; }
   }
   return lastSafeIndex;
+}
+
+function matches(open, close) {
+  return (open === '(' && close === ')') || (open === '[' && close === ']') || (open === '{' && close === '}') || (open === '`' && close === '`') || (open === '"' && close === '"') || (open === '\'' && close === '\'');
 }
 
 async function splitMessage(content, maxLength = 1970) {
@@ -114,6 +124,11 @@ async function createRun(event, thread) {
   catch (error) { await handleError(event, error); return null; }
 }
 
+async function getRun(event, thread, run) {
+  try { return await openai.beta.threads.runs.retrieve(thread, run); }
+  catch (error) { await handleError(event, error); return null; }
+}
+
 async function getResponse(event, thread) {
   try { const messages = await openai.beta.threads.messages.list( thread, { limit: 1 } ); return messages.data; }
   catch (error) { await handleError(event, error); return null; }
@@ -137,18 +152,42 @@ async function releaseThreadLock(event, threadId) {
 }
 
 async function processMessage(event, channel, message) {
-  let theThread, retries = 300;
+  let theThread, retries = 180;
   try {
     theThread = await getThread(event, channel) || await createThread(event, channel);
+
     while (!(await acquireThreadLock(event, theThread)) && retries > 0) { await sleep(1000); retries--; }
     if (retries === 0) { throw new Error("Failed to acquire thread lock."); }
+
     await messageThread(event, theThread, message);
-    const theRun = await createRun(event, theThread);
+    let theRun = await createRun(event, theThread);
+
+    if (theRun && theRun.status === "requires_action") {
+      const getrun = await getRun(event, theThread, theRun.id);
+      let toolOutputsPromises = getrun.required_action.submit_tool_outputs.tool_calls.map(async (callDetails) => {
+        try {
+          let callId = callDetails.id;
+          let args = JSON.parse(callDetails.function.arguments);
+          let result = await toolbox[callDetails.function.name](args);
+          return {
+            tool_call_id: callId,
+            output: JSON.stringify(result)
+          };
+        }
+        catch (error) { await handleError(event, error); }
+      });
+
+      let toolOutputs = await Promise.all(toolOutputsPromises);
+      toolOutputs = toolOutputs.filter(output => output !== null);
+      theRun = await openai.beta.threads.runs.submitToolOutputsAndPoll(theThread, theRun.id, { tool_outputs: toolOutputs });
+    }
+    
     if (theRun && theRun.status === "completed") {
       const responses = await getResponse(event, theThread);
       await prepMessage(event, responses[0].content[0].text.value);
     }
     else { throw new Error(`Debug: OpenAI failure (status unavailable)`); }
+
   }
   catch (error) { await handleError(event, error); }
   finally {

@@ -25,6 +25,8 @@
     "airtable": "^0.12.2",
     "discord.js": "^14.14.1",
     "dotenv": "^16.4.5",
-    "openai": "^4.38.5"
+    "fs": "^0.0.1-security",
+    "openai": "^4.38.5",
+    "path": "^0.12.7"
   }
 }

@@ -1,44 +1,35 @@
-//faux code
+// get_weather.js
 
-const get_weather = (args) => {
-  console.log("get_weather was called");
-  let location = args.location || "HongKong";
-  let unit = args.unit || "c";
-  return {
-    "success": true,
-    "location": location,
-    "temperature": "18",
-    "unit": unit
-  };
-};
-
-module.exports = { get_weather };
-
-/*real code
-
-const { get_coordinate } = require("./get_coordinate.js");
-const OPENWEATHER_API_KEY = process.env.OPENWEATHERAPIKEY;
+const fetch = require('node-fetch');
+const { get_gptresponse } = require('./get_gptresponse');
+const { get_coordinate } = require('./get_coordinate');
+const OPENWEATHER_APIKEY = process.env.OPENWEATHER_APIKEY;
 
 const get_weather = async (args) => {
-  console.log("get_time was called");
+    console.log("get_weather was called");
+    try {
+        const { location = "Denver, CO", unit = "imperial" } = args;
+        const cityName = location.split(',')[0];
+        
+        let geoInfo = await get_coordinate({ cityName });
+        if (geoInfo.error) throw new Error(geoInfo.error);
 
-  try {
-    // Default values
-    const { location = "Hong Kong", unit = "c" } = args;
-    let geoInfo = await get_coordinate({ location });
-    if (geoInfo.error) { throw new Error(geoInfo.error); }
+        let { latitude, longitude } = geoInfo;
 
-    let { latitude, longitude } = geoInfo;
-    const respond = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${OPENWEATHER_API_KEY}`);
+        const excludeParts = "minutely,hourly,daily,alerts";
+        const weatherUrl = `https://api.openweathermap.org/data/3.0/onecall?lat=${latitude}&lon=${longitude}&exclude=${excludeParts}&units=${unit}&appid=${OPENWEATHER_APIKEY}`;
 
-    return await respond.json();
-  } catch (error) {
-    console.log("Error:", error.message);
-    return { error: error.message };
-  }
+        const response = await fetch(weatherUrl);
+        const weatherData = await response.json();
 
+        const directive = `You are a meteorologist, you can take complicated weather data and turn it into a simple, friendly, easy to digest, and personalized weather report. The user requests not to use lists and to convert complex units such as "hPa" into more understandable units or exclude them. The user will not be eligible to ask follow up questions so please make the report concise as a stand-alone message. Feel free to spruce it up with emojis!`;
+        const data = JSON.stringify(weatherData);
+
+        const humanFriendlyReport = await get_gptresponse(directive, data);
+        console.log(humanFriendlyReport);
+        return humanFriendlyReport;
+    }
+    catch (error) { return { error: error.message }; }
 };
 
 module.exports = { get_weather };
-
-*/

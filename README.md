@@ -11,7 +11,7 @@ This app is integrated with the OpenAI Assistants API, allowing the Discord bot 
 ## How to Use
 
 1. **Configure your Assistant**
-   - Log into the OpenAI platform and create a new assistant and configure it with your preferred model, instructions, and other options. (currently does not support function calling.)
+   - Log into the OpenAI platform and create a new assistant and configure it with your preferred model, instructions, and other options.
    - Obtain the `Assistant ID` from the assistant settings and include it in the environment variables as `OPENAI_ASSISTANTID`.
 
 2. **Starting the Bot:**

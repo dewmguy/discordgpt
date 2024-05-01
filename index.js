@@ -12,8 +12,12 @@ const base = new Airtable({apiKey: process.env.AIRTABLE_APIKEY}).base(process.en
 const airtable_table = 'threadList';
 
 //openai
-const { OpenAI } = require('openai');
+const { OpenAI, toFile } = require('openai');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_APIKEY });
+
+//axios
+const Axios = require('axios');
+const { Readable } = require('stream');
 
 //functions
 async function handleError(event, error) {
@@ -151,13 +155,59 @@ async function releaseThreadLock(event, threadId) {
   catch (error) { await handleError(event, error); }
 }
 
-async function processMessage(event, channel, message) {
+async function uploadFiles(event, files) {
+  try {
+    const fileIds = [];
+    for (const [, file] of files) {
+      try {
+        const response = await Axios({ method: 'get', url: file.url, responseType: 'arraybuffer' });
+        const fileObject = await toFile(Buffer.from(response.data), file.name);
+        const fileData = await openai.files.create({ file: fileObject, purpose: 'assistants' });
+        fileIds.push(fileData.id);
+        console.log(`File uploaded: ${fileData.id}`);
+        const assistantDetails = await openai.beta.assistants.retrieve(process.env.OPENAI_ASSISTANTID);
+        let existingFileIds = assistantDetails.file_ids || [];
+        await openai.beta.assistants.update(process.env.OPENAI_ASSISTANTID, { file_ids: [...existingFileIds, fileData.id], });
+      }
+      catch (error) { console.error('Error uploading file to OpenAI:', error); throw error; }
+    }
+    return fileIds;
+  }
+  catch (error) { await handleError(event, error); return null; }
+}
+
+async function manageVectorStore(event, threadId, fileIds) {
+  try {
+    let vectorStore = await checkExistingVectorStore(threadId);
+    if (!vectorStore) {
+      vectorStore = await openai.beta.vectorStores.create({ name: `VectorStore for Thread ${threadId}` });
+      await openai.beta.threads.update(threadId, {
+        tool_resources: { file_search: { vector_store_ids: [vectorStore.id] } }
+      });
+    }
+    await openai.beta.vectorStores.fileBatches.createAndPoll(vectorStore.id, { file_ids: fileIds });
+    console.log('Files have been added to vector store:', vectorStore.id);
+  }
+  catch (error) { await handleError(event, error); }
+}
+
+async function checkExistingVectorStore(threadId) {
+  const thread = await openai.beta.threads.retrieve(threadId);
+  return thread.tool_resources?.file_search?.vector_store_ids?.[0] || null;
+}
+
+async function processMessage(event, channel, message, files) {
   let theThread, retries = 180;
   try {
     theThread = await getThread(event, channel) || await createThread(event, channel);
 
     while (!(await acquireThreadLock(event, theThread)) && retries > 0) { await sleep(1000); retries--; }
     if (retries === 0) { throw new Error("Failed to acquire thread lock."); }
+    
+    if (files.size > 0) {
+      const fileIds = await uploadFiles(files);
+      await manageVectorStore(event, theThread, fileIds);
+    }
 
     await messageThread(event, theThread, message);
     let theRun = await createRun(event, theThread);
@@ -212,11 +262,11 @@ client.on('messageCreate', async event => {
   let injectData = `${authorTag} (${isoDate}})`;
   let content = event.content;
   let message = content.replace(/<@\d+>/, injectData);
+  let files = event.attachments;
   try {
     keepTyping = true;
     sendTyping(event.channel);
-    if (event.attachments.size) { throw new Error(`The ChatGPT bot is unable to interpret images or files at this time. Please use the DALL·E bot.`); }
-    await processMessage(event, channel, message);
+    await processMessage(event, channel, message, files);
   }
   catch (error) { await handleError(event, error); }
   finally { keepTyping = false; }

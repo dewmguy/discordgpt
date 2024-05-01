@@ -1,18 +1,16 @@
 //faux code
 
-const get_weather = (args) => {
-  console.log("get_weather was called");
+const get_precipitation = (args) => {
+  console.log("get_precipitation was called");
   let location = args.location || "HongKong";
-  let unit = args.unit || "c";
   return {
     "success": true,
     "location": location,
-    "temperature": "18",
-    "unit": unit
+    "precipitation": "50% chance of rain",
   };
 };
 
-module.exports = { get_weather };
+module.exports = { get_precipitation };
 
 /*real code
 

@@ -63,10 +63,6 @@ async function findSplit(content, start, end) {
   return lastSafeIndex;
 }
 
-function matches(open, close) {
-  return (open === '(' && close === ')') || (open === '[' && close === ']') || (open === '{' && close === '}') || (open === '`' && close === '`') || (open === '"' && close === '"') || (open === '\'' && close === '\'');
-}
-
 async function splitMessage(content, maxLength = 1970) {
   const splitContent = [];
   let start = 0;
@@ -91,31 +87,11 @@ async function prepMessage(event, content) {
 }
 
 async function sendMessage(event, content) {
-  try { const message = await event.reply(content); }
-  catch (error) { await handleError(event, error); }
-}
-
-async function getThread(event, channel) {
   try {
-    const records = await base(airtable_table).select({ filterByFormula: `{DiscordThreadId} = "${channel}"` }).firstPage();
-    if (records.length) { return records[0].get('OpenAiThreadId'); }
-    else { return null; }
+    const message = await event.reply(content);
+    console.log(`openai returned message.`);
   }
   catch (error) { await handleError(event, error); }
-}
-
-async function createThread(event, channelId) {
-  try {
-    const createdThread = await openai.beta.threads.create();
-    await saveThread(event, channelId, createdThread.id);
-    return createdThread.id;
-  }
-  catch (error) { await handleError(event, error); return null; }
-}
-
-async function saveThread(event, channelId, threadId) {
-  try { await base(airtable_table).create({ 'DiscordThreadId': channelId, 'OpenAiThreadId': threadId }); }
-  catch (error) { await handleError(event, error); return null; }
 }
 
 async function messageThread(event, thread, content) {
@@ -138,13 +114,31 @@ async function getResponse(event, thread) {
   catch (error) { await handleError(event, error); return null; }
 }
 
-async function acquireThreadLock(event, threadId) {
+async function uploadVectorStore(event, thread, files) {
   try {
-    const records = await base('threadLocks').select({ filterByFormula: `{OpenAiThreadId} = "${threadId}"` }).firstPage();
-    if (records.length === 0) { await base('threadLocks').create({'OpenAiThreadId': threadId}); return true; }
-    return false;
+    const records = await base(airtable_table).select({ filterByFormula: `{OpenAiThreadId}='${thread}'` }).firstPage();
+    let storeID = records.length > 0 ? records[0].get('OpenAiStoreId') : null;
+    if (storeID) { await openai.beta.vectorStores.fileBatches.createAndPoll(storeID, { file_ids: files }); }
+    console.log(`Files uploaded to vector store: ${files}`);
   }
-  catch (error) { await handleError(event, error); return null; }
+  catch (error) { await handleError(event, error); }
+}
+
+async function uploadFiles(event) {
+  let files = event.attachments;
+  if (!files || files.size === 0) { return []; }
+  const fileIds = [];
+  for (const [, file] of files) {
+    try {
+      const response = await Axios({ method: 'get', url: file.url, responseType: 'arraybuffer' });
+      const fileObject = await toFile(Buffer.from(response.data), file.name);
+      const fileData = await openai.files.create({ file: fileObject, purpose: 'assistants' });
+      fileIds.push(fileData.id);
+      console.log(`File ${filedata.id} uploaded to assistant.`);
+    }
+    catch (error) { throw error; }
+  }
+  return fileIds;
 }
 
 async function releaseThreadLock(event, threadId) {
@@ -155,66 +149,93 @@ async function releaseThreadLock(event, threadId) {
   catch (error) { await handleError(event, error); }
 }
 
-async function uploadFiles(event, files) {
+async function acquireThreadLock(event, threadId) {
   try {
-    const fileIds = [];
-    for (const [, file] of files) {
-      try {
-        const response = await Axios({ method: 'get', url: file.url, responseType: 'arraybuffer' });
-        const fileObject = await toFile(Buffer.from(response.data), file.name);
-        const fileData = await openai.files.create({ file: fileObject, purpose: 'assistants' });
-        fileIds.push(fileData.id);
-        console.log(`File uploaded: ${fileData.id}`);
-        const assistantDetails = await openai.beta.assistants.retrieve(process.env.OPENAI_ASSISTANTID);
-        let existingFileIds = assistantDetails.file_ids || [];
-        await openai.beta.assistants.update(process.env.OPENAI_ASSISTANTID, { file_ids: [...existingFileIds, fileData.id], });
-      }
-      catch (error) { console.error('Error uploading file to OpenAI:', error); throw error; }
-    }
-    return fileIds;
+    const records = await base('threadLocks').select({ filterByFormula: `{OpenAiThreadId} = "${threadId}"` }).firstPage();
+    if (records.length === 0) { await base('threadLocks').create({'OpenAiThreadId': threadId}); return true; }
+    return false;
   }
   catch (error) { await handleError(event, error); return null; }
 }
 
-async function manageVectorStore(event, threadId, fileIds) {
+async function saveThread(event, channel, thread, store) {
   try {
-    let vectorStore = await checkExistingVectorStore(threadId);
-    if (!vectorStore) {
-      vectorStore = await openai.beta.vectorStores.create({ name: `VectorStore for Thread ${threadId}` });
-      await openai.beta.threads.update(threadId, {
-        tool_resources: { file_search: { vector_store_ids: [vectorStore.id] } }
-      });
-    }
-    await openai.beta.vectorStores.fileBatches.createAndPoll(vectorStore.id, { file_ids: fileIds });
-    console.log('Files have been added to vector store:', vectorStore.id);
+    await base(airtable_table).create({
+      'DiscordThreadId': channel,
+      'OpenAiThreadId': thread,
+      'OpenAiStoreId': store
+    });
+  }
+  catch (error) { await handleError(event, error); return null; }
+}
+
+async function createVectorStore(event, thread) {
+  try {
+    const createdStore = await openai.beta.vectorStores.create({ name: `Thread ${thread}` });
+    return createdStore.id;
+  }
+  catch (error) { await handleError(event, error); return null; }
+}
+
+async function createThread(event, channel) {
+  try {
+    const createdThread = await openai.beta.threads.create();
+    return createdThread.id;
+  }
+  catch (error) { await handleError(event, error); return null; }
+}
+
+async function getStore(channel) {
+  try {
+    const records = await base(airtable_table).select({ filterByFormula: `{DiscordThreadId} = "${channel}"` }).firstPage();
+    if (records.length) { return records[0].get('OpenAiStoreId'); }
+    else { return null; }
+  }
+  catch (error) { console.error(`Error in getStore for channel ID ${channel}: ${error}`); }
+}
+
+async function prepNewThread(event, channel) {
+  try {
+    const threadId = await createThread(event, channel);
+    const vectorStoreId = await createVectorStore(event, threadId);
+    await saveThread(event, channel, threadId, vectorStoreId);
+    return threadId;
+  }
+  catch (error) { await handleError(event, error); return null; }
+}
+
+async function getThread(event, channel) {
+  try {
+    const records = await base(airtable_table).select({ filterByFormula: `{DiscordThreadId} = "${channel}"` }).firstPage();
+    if (records.length) { return records[0].get('OpenAiThreadId'); }
+    else { return null; }
   }
   catch (error) { await handleError(event, error); }
 }
 
-async function checkExistingVectorStore(threadId) {
-  const thread = await openai.beta.threads.retrieve(threadId);
-  return thread.tool_resources?.file_search?.vector_store_ids?.[0] || null;
-}
-
-async function processMessage(event, channel, message, files) {
-  let theThread, retries = 180;
+async function processMessage(event, channel, message) {
+  let theThread, theStore, retries = 180;
   try {
-    theThread = await getThread(event, channel) || await createThread(event, channel);
+    theThread = await getThread(event, channel) || await prepNewThread(event, channel);
+    theStore = await getStore(channel);
 
     while (!(await acquireThreadLock(event, theThread)) && retries > 0) { await sleep(1000); retries--; }
-    if (retries === 0) { throw new Error("Failed to acquire thread lock."); }
+    if (retries === 0) { throw new Error("There is an error in this message thread, make a new thread."); }
     
-    if (files.size > 0) {
-      const fileIds = await uploadFiles(files);
-      await manageVectorStore(event, theThread, fileIds);
+    if (event.attachments.size > 0) {
+      console.log(`User uploaded files.`);
+      const files = await uploadFiles(event);
+      if (files.length > 0) { await uploadVectorStore(event, theThread, files); }
     }
 
     await messageThread(event, theThread, message);
     let theRun = await createRun(event, theThread);
 
     if (theRun && theRun.status === "requires_action") {
+      console.log(`User initiated run.`);
       const getrun = await getRun(event, theThread, theRun.id);
       let toolOutputsPromises = getrun.required_action.submit_tool_outputs.tool_calls.map(async (callDetails) => {
+        console.log(`User initiated function calling.`);
         try {
           let callId = callDetails.id;
           let args = JSON.parse(callDetails.function.arguments);
@@ -229,19 +250,19 @@ async function processMessage(event, channel, message, files) {
 
       let toolOutputs = await Promise.all(toolOutputsPromises);
       toolOutputs = toolOutputs.filter(output => output !== null);
-      theRun = await openai.beta.threads.runs.submitToolOutputsAndPoll(theThread, theRun.id, { tool_outputs: toolOutputs });
+      theRun = await openai.beta.threads.runs.submitToolOutputsAndPoll(theThread, theRun.id, { tool_outputs: toolOutputs }); // Changed `thread` to `theThread`
     }
     
     if (theRun && theRun.status === "completed") {
-      const responses = await getResponse(event, theThread);
+      const responses = await getResponse(event, theThread); // Changed `thread` to `theThread`
       await prepMessage(event, responses[0].content[0].text.value);
     }
-    else { throw new Error(`Debug: OpenAI failure (status unavailable)`); }
+    else { throw new Error(`Debug: Something went wrong with OpenAI, please try your prompt again.`); }
 
   }
   catch (error) { await handleError(event, error); }
   finally {
-    if (theThread) { await releaseThreadLock(event, theThread); }
+    if (theThread) { await releaseThreadLock(event, theThread); } // Changed `thread` to `theThread`
   }
 }
 
@@ -251,6 +272,34 @@ function sendTyping(channel) {
 }
 
 let keepTyping = true;
+
+async function deleteVectorStore(store) {
+  try { await openai.beta.vectorStores.del(store); }
+  catch (error) { console.error(`Error in deleteVectorStore for store ID ${store}: ${error}`); }
+}
+
+async function deleteThread(thread) {
+  try {
+    const records = await base(airtable_table).select({ filterByFormula: `{DiscordThreadId} = '${thread}'` }).firstPage();
+    if (records.length == 1) { await Promise.all(records.map(record => base(airtable_table).destroy(record.id))); }
+  }
+  catch (error) { console.error(`Error in deleteThread for thread ID ${thread}: ${error}`); }
+}
+
+async function processDeleted(channel) {
+  try {
+    const store = await getStore(channel);
+    await deleteVectorStore(store);
+    await deleteThread(channel);
+  }
+  catch (error) { console.error(`Error in processDeleted for thread ID ${channel}: ${error}`); }
+}
+
+//discord thread deleted
+client.on('threadDelete', async event => {
+  await processDeleted(event.id);
+  console.log(`User deleted thread.`);
+});
 
 //main logic
 client.on('messageCreate', async event => {
@@ -262,11 +311,11 @@ client.on('messageCreate', async event => {
   let injectData = `${authorTag} (${isoDate}})`;
   let content = event.content;
   let message = content.replace(/<@\d+>/, injectData);
-  let files = event.attachments;
+  console.log(`User submitted message.`);
   try {
     keepTyping = true;
     sendTyping(event.channel);
-    await processMessage(event, channel, message, files);
+    await processMessage(event, channel, message);
   }
   catch (error) { await handleError(event, error); }
   finally { keepTyping = false; }

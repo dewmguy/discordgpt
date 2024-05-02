@@ -134,7 +134,7 @@ async function uploadFiles(event) {
       const fileObject = await toFile(Buffer.from(response.data), file.name);
       const fileData = await openai.files.create({ file: fileObject, purpose: 'assistants' });
       fileIds.push(fileData.id);
-      console.log(`File ${filedata.id} uploaded to assistant.`);
+      console.log(`File ${fileData.id} uploaded to assistant.`);
     }
     catch (error) { throw error; }
   }

@@ -10,6 +10,8 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBit
 const Airtable = require('airtable');
 const base = new Airtable({apiKey: process.env.AIRTABLE_APIKEY}).base(process.env.AIRTABLE_BASE);
 const airtable_table = 'threadList';
+const airtable_locks = 'threadLocks';
+const airtable_files = 'fileUploads';
 
 //openai
 const { OpenAI, toFile } = require('openai');
@@ -124,7 +126,7 @@ async function uploadVectorStore(event, thread, files) {
   catch (error) { await handleError(event, error); }
 }
 
-async function uploadFiles(event) {
+async function uploadFiles(event, thread) {
   let files = event.attachments;
   if (!files || files.size === 0) { return []; }
   const fileIds = [];
@@ -135,6 +137,7 @@ async function uploadFiles(event) {
       const fileData = await openai.files.create({ file: fileObject, purpose: 'assistants' });
       fileIds.push(fileData.id);
       console.log(`File ${fileData.id} uploaded to assistant.`);
+      await base(airtable_files).create({ 'OpenAiFileId': fileData.id, 'OpenAiThreadId': thread });
     }
     catch (error) { throw error; }
   }
@@ -204,27 +207,33 @@ async function prepNewThread(event, channel) {
   catch (error) { await handleError(event, error); return null; }
 }
 
-async function getThread(event, channel) {
+async function getThread(channel) {
   try {
     const records = await base(airtable_table).select({ filterByFormula: `{DiscordThreadId} = "${channel}"` }).firstPage();
-    if (records.length) { return records[0].get('OpenAiThreadId'); }
+    if (records.length) {
+      const thread = records[0].get('OpenAiThreadId');
+      console.log(`recovered thread ${thread} from table ${airtable_table}`);
+      return thread;
+    }
     else { return null; }
   }
-  catch (error) { await handleError(event, error); }
+  catch (error) { await handleError(error); }
 }
 
 async function processMessage(event, channel, message) {
   let theThread, theStore, retries = 180;
   try {
-    theThread = await getThread(event, channel) || await prepNewThread(event, channel);
+    theThread = await getThread(channel) || await prepNewThread(event, channel);
     theStore = await getStore(channel);
 
     while (!(await acquireThreadLock(event, theThread)) && retries > 0) { await sleep(1000); retries--; }
     if (retries === 0) { throw new Error("There is an error in this message thread, make a new thread."); }
     
+    sendTyping(event.channel);
+    
     if (event.attachments.size > 0) {
       console.log(`User uploaded files.`);
-      const files = await uploadFiles(event);
+      const files = await uploadFiles(event, theThread);
       if (files.length > 0) { await uploadVectorStore(event, theThread, files); }
     }
 
@@ -266,6 +275,57 @@ async function processMessage(event, channel, message) {
   }
 }
 
+async function deleteFiles(thread) {
+  try {
+    const records = await base(airtable_files).select({ filterByFormula: `{OpenAiThreadId} = '${thread}'` }).firstPage();
+    if (records.length > 0) {
+      const deletions = records.map(async record => {
+        await openai.files.del(record.get('OpenAiFileId'));
+        await base(airtable_files).destroy(record.id);
+      });
+      await Promise.all(deletions);
+      console.log(`Files and records deleted for thread ID ${thread}.`);
+    }
+    else { console.log(`No files to delete for thread ID ${thread}.`); }
+  }
+  catch (error) { console.error(`Error in deleteFiles for thread ID ${thread}: ${error}`); }
+}
+
+async function deleteVectorStore(store) {
+  try { await openai.beta.vectorStores.del(store); }
+  catch (error) { console.error(`Error in deleteVectorStore for store ID ${store}: ${error}`); }
+}
+
+async function deleteLock(thread) {
+  try {
+    const records = await base(airtable_locks).select({ filterByFormula: `{OpenAiThreadId} = '${thread}'` }).firstPage();
+    if (records.length == 1) { await Promise.all(records.map(record => base(airtable_locks).destroy(record.id))); }
+    else { console.log(`no thread to delete in table ${airtable_locks}`); }
+  }
+  catch (error) { console.error(`Error in deleteLock for thread ID ${thread}: ${error}`); }
+}
+
+async function deleteThread(channel) {
+  try {
+    const records = await base(airtable_table).select({ filterByFormula: `{DiscordThreadId} = '${channel}'` }).firstPage();
+    if (records.length == 1) { await Promise.all(records.map(record => base(airtable_table).destroy(record.id))); }
+    else { console.log(`no thread to delete in table ${airtable_table}`); }
+  }
+  catch (error) { console.error(`Error in deleteThread for channel ID ${channel}: ${error}`); }
+}
+
+async function processDeleteThread(channel) {
+  try {
+    const store = await getStore(channel);
+    const thread = await getThread(channel);
+    await deleteVectorStore(store);
+    await deleteThread(channel);
+    await deleteLock(thread);
+    await deleteFiles(thread);
+  }
+  catch (error) { console.error(`Error in processDeleteThread for thread ID ${channel}: ${error}`); }
+}
+
 function sendTyping(channel) {
   if (!keepTyping) { return; }
   channel.sendTyping().then(() => { setTimeout(() => sendTyping(channel), 10000); });
@@ -273,31 +333,9 @@ function sendTyping(channel) {
 
 let keepTyping = true;
 
-async function deleteVectorStore(store) {
-  try { await openai.beta.vectorStores.del(store); }
-  catch (error) { console.error(`Error in deleteVectorStore for store ID ${store}: ${error}`); }
-}
-
-async function deleteThread(thread) {
-  try {
-    const records = await base(airtable_table).select({ filterByFormula: `{DiscordThreadId} = '${thread}'` }).firstPage();
-    if (records.length == 1) { await Promise.all(records.map(record => base(airtable_table).destroy(record.id))); }
-  }
-  catch (error) { console.error(`Error in deleteThread for thread ID ${thread}: ${error}`); }
-}
-
-async function processDeleted(channel) {
-  try {
-    const store = await getStore(channel);
-    await deleteVectorStore(store);
-    await deleteThread(channel);
-  }
-  catch (error) { console.error(`Error in processDeleted for thread ID ${channel}: ${error}`); }
-}
-
 //discord thread deleted
 client.on('threadDelete', async event => {
-  await processDeleted(event.id);
+  await processDeleteThread(event.id);
   console.log(`User deleted thread.`);
 });
 

@@ -130,17 +130,21 @@ async function uploadFiles(event, thread) {
   let files = event.attachments;
   if (!files || files.size === 0) { return []; }
   const fileIds = [];
+  let message = `the following files have been uploaded to this conversation thread for your reference: `;
   for (const [, file] of files) {
     try {
       const response = await Axios({ method: 'get', url: file.url, responseType: 'arraybuffer' });
       const fileObject = await toFile(Buffer.from(response.data), file.name);
       const fileData = await openai.files.create({ file: fileObject, purpose: 'assistants' });
       fileIds.push(fileData.id);
-      console.log(`File ${fileData.id} uploaded to assistant.`);
       await base(airtable_files).create({ 'OpenAiFileId': fileData.id, 'OpenAiThreadId': thread });
+      message += `${fileData.filename} (${fileData.id}, ${fileData.purpose})`;
+      console.log(`file added to assistant: ${fileData.filename} (${fileData.id}, ${fileData.purpose})`);
     }
-    catch (error) { throw error; }
+    catch (error) { await handleError(event, error); return null; }
   }
+  await messageThread(event, thread, message);
+  console.log(message);
   return fileIds;
 }
 
@@ -236,7 +240,7 @@ async function processMessage(event, channel, message) {
       const files = await uploadFiles(event, theThread);
       if (files.length > 0) { await uploadVectorStore(event, theThread, files); }
     }
-
+    
     await messageThread(event, theThread, message);
     let theRun = await createRun(event, theThread);
 

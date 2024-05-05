@@ -16,6 +16,4 @@ fs.readdirSync(folderPath).forEach(file => {
     }
 });
 
-// console.log(exportedModules);
-
 module.exports = exportedModules;

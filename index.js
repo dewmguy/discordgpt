@@ -179,6 +179,7 @@ async function saveThread(event, channel, thread, store) {
 async function createVectorStore(event, thread) {
   try {
     const createdStore = await openai.beta.vectorStores.create({ name: `Thread ${thread}` });
+    console.log(`Created vector store: ${createdStore.id}`);
     return createdStore.id;
   }
   catch (error) { await handleError(event, error); return null; }
@@ -187,6 +188,7 @@ async function createVectorStore(event, thread) {
 async function createThread(event, channel) {
   try {
     const createdThread = await openai.beta.threads.create();
+    console.log(`Created thread: ${createdThread.id}`);
     return createdThread.id;
   }
   catch (error) { await handleError(event, error); return null; }
@@ -296,8 +298,8 @@ async function deleteFiles(thread) {
 }
 
 async function deleteVectorStore(store) {
-  try { await openai.beta.vectorStores.del(store); }
-  catch (error) { console.error(`Error in deleteVectorStore for store ID ${store}: ${error}`); }
+  await openai.beta.vectorStores.del(store);
+  console.log(`vector store ${store} deleted.`);
 }
 
 async function deleteLock(thread) {

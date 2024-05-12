@@ -1,18 +1,23 @@
 // get_google_sports.js
 
+// serpapi
 const fetch = require('node-fetch');
 const SERPAPI_APIKEY = process.env.SERPAPI_APIKEY;
 
+// openai
+const { get_gptresponse } = require('./get_gptresponse');
+
 const get_google_sports = async ({ query }) => {
-  console.log("get_google_sports function was called");
   try {
-    const response = await fetch(`https://serpapi.com/search?q=${encodeURIComponent(query)}&api_key=${SERPAPI_APIKEY}`, {method: 'GET'});
+    console.log(`get_google_sports function was called`);
+    const serpApiUrl = `https://serpapi.com/search?q=${encodeURIComponent(query)}&api_key=${SERPAPI_APIKEY}`;
+    const response = await fetch(serpApiUrl, {method: 'GET'});
     const data = await response.json();
-    console.log("Data fetched successfully:", data.sports_results);
-    return data.sports_results;
+    if(data.sports_results) { return data.sports_results; }
+    else { return data.organic_results; }
   }
   catch (error) {
-    console.log("Error:", error.message);
+    console.log("Error: ", error.message);
     return { error: error.message };
   }
 }

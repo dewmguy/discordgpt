@@ -1,14 +1,19 @@
 // get_google_news.js
 
+// serpapi
 const fetch = require('node-fetch');
 const SERPAPI_APIKEY = process.env.SERPAPI_APIKEY;
 
+// openai
+const { get_gptresponse } = require('./get_gptresponse');
+
 const get_google_news = async ({ query }) => {
-  console.log("get_google_news function was called");
   try {
-    const response = await fetch(`https://serpapi.com/search?engine=google_news&q=${encodeURIComponent(query)}&api_key=${SERPAPI_APIKEY}`, {method: 'GET'});
+    console.log("get_google_news function was called");
+    const serpApiUrl = `https://serpapi.com/search?engine=google_news&q=${encodeURIComponent(query)}&api_key=${SERPAPI_APIKEY}`;
+    const response = await fetch(serpApiUrl, {method: 'GET'});
     const data = await response.json();
-    console.log("Data fetched successfully:", data.news_results);
+
     return data.news_results;
   }
   catch (error) {

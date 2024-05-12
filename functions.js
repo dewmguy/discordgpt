@@ -5,15 +5,14 @@ const folderPath = path.join(__dirname, './functions');
 const exportedModules = {};
 
 fs.readdirSync(folderPath).forEach(file => {
-    if (file.endsWith('.js')) {
-        try {
-            const moduleName = path.parse(file).name;
-            const modulePath = path.join(folderPath, file);
-            exportedModules[moduleName] = require(modulePath)[moduleName];
-        } catch (error) {
-            console.error(`Failed to load module ${file}: ${error.message}`);
-        }
+  if (file.endsWith('.js')) {
+    try {
+      const moduleName = path.parse(file).name;
+      const modulePath = path.join(folderPath, file);
+      exportedModules[moduleName] = require(modulePath)[moduleName];
     }
+    catch (error) { console.error(`Failed to load module ${file}: ${error.message}`); }
+  }
 });
 
 module.exports = exportedModules;

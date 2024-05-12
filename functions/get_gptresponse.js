@@ -5,10 +5,8 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_APIKEY });
 
 // This function can be used to generate a response from the OpenAI GPT model based on a custom prompt.
 const get_gptresponse = async (directive,data) => {
-	console.log("get_gptresponse was called");
-    console.log(directive);
-    console.log(data);
 	try {
+		console.log(`get_gptresponse function was called`);
 		const completion = await openai.chat.completions.create({
 			messages: [
 				{ "role": "system", "content": directive },
@@ -16,8 +14,8 @@ const get_gptresponse = async (directive,data) => {
 			],
 			model: "gpt-4-turbo",
 		});
-        console.log(completion.choices[0]?.message?.content);
-		return completion.choices[0]?.message?.content;
+    const response = completion.choices[0]?.message?.content;
+		return response;
 	}
 	catch (error) { return { error: error.message }; }
 }

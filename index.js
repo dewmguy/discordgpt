@@ -1,6 +1,6 @@
 //assistant bot
 require('dotenv').config();
-const toolbox = require("./functions.js");
+const functions = require("./functions.js");
 
 //discord
 const { Client, Events, GatewayIntentBits } = require('discord.js');
@@ -151,7 +151,10 @@ async function uploadFiles(event, thread) {
 async function releaseThreadLock(event, threadId) {
   try {
     const records = await base('threadLocks').select({ filterByFormula: `{OpenAiThreadId} = "${threadId}"` }).firstPage();
-    if (records.length > 0) { const recordId = records[0].id; await base('threadLocks').destroy(recordId); }
+    if (records.length > 0) {
+      console.log(`released lock on thread ${threadId}`);
+      const recordId = records[0].id; await base('threadLocks').destroy(recordId);
+    }
   }
   catch (error) { await handleError(event, error); }
 }
@@ -160,6 +163,7 @@ async function acquireThreadLock(event, threadId) {
   try {
     const records = await base('threadLocks').select({ filterByFormula: `{OpenAiThreadId} = "${threadId}"` }).firstPage();
     if (records.length === 0) { await base('threadLocks').create({'OpenAiThreadId': threadId}); return true; }
+    console.log(`placing lock on thread ${threadId} until run completes`);
     return false;
   }
   catch (error) { await handleError(event, error); return null; }
@@ -205,6 +209,7 @@ async function getStore(channel) {
 
 async function prepNewThread(event, channel) {
   try {
+    console.log(`thread does not exist for this channel ${channel}`);
     const threadId = await createThread(event, channel);
     const vectorStoreId = await createVectorStore(event, threadId);
     await saveThread(event, channel, threadId, vectorStoreId);
@@ -249,12 +254,13 @@ async function processMessage(event, channel, message) {
     if (theRun && theRun.status === "requires_action") {
       console.log(`User initiated run.`);
       const getrun = await getRun(event, theThread, theRun.id);
-      let toolOutputsPromises = getrun.required_action.submit_tool_outputs.tool_calls.map(async (callDetails) => {
+      let functionCallPromises = getrun.required_action.submit_tool_outputs.tool_calls.map(async (functionCall) => {
         console.log(`User initiated function calling.`);
+        console.log(`functionCall Object:`,JSON.stringify(functionCall));
         try {
-          let callId = callDetails.id;
-          let args = JSON.parse(callDetails.function.arguments);
-          let result = await toolbox[callDetails.function.name](args);
+          let callId = functionCall.id;
+          let args = JSON.parse(functionCall.function.arguments);
+          let result = await functions[functionCall.function.name](args);
           return {
             tool_call_id: callId,
             output: JSON.stringify(result)
@@ -263,22 +269,20 @@ async function processMessage(event, channel, message) {
         catch (error) { await handleError(event, error); }
       });
 
-      let toolOutputs = await Promise.all(toolOutputsPromises);
-      toolOutputs = toolOutputs.filter(output => output !== null);
-      theRun = await openai.beta.threads.runs.submitToolOutputsAndPoll(theThread, theRun.id, { tool_outputs: toolOutputs }); // Changed `thread` to `theThread`
+      let functionCalls = await Promise.all(functionCallPromises);
+      functionCalls = functionCalls.filter(output => output !== null);
+      theRun = await openai.beta.threads.runs.submitToolOutputsAndPoll(theThread, theRun.id, { tool_outputs: functionCalls });
     }
     
     if (theRun && theRun.status === "completed") {
-      const responses = await getResponse(event, theThread); // Changed `thread` to `theThread`
+      const responses = await getResponse(event, theThread);
       await prepMessage(event, responses[0].content[0].text.value);
     }
     else { throw new Error(`Debug: Something went wrong with OpenAI, please try your prompt again.`); }
 
   }
   catch (error) { await handleError(event, error); }
-  finally {
-    if (theThread) { await releaseThreadLock(event, theThread); } // Changed `thread` to `theThread`
-  }
+  finally { if (theThread) { await releaseThreadLock(event, theThread); } }
 }
 
 async function deleteFiles(thread) {

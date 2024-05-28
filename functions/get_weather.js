@@ -7,6 +7,7 @@ const OPENWEATHER_APIKEY = process.env.OPENWEATHER_APIKEY;
 const get_weather = async ({ location, report }) => {
   console.log("get_weather was called");
   try {
+    console.log(`getting coordinates for ${location}`);
     let coordinates = await get_coordinate({ location });
     if (coordinates.error) throw new Error(coordinates.error);
     let { latitude, longitude } = coordinates;

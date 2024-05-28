@@ -301,8 +301,10 @@ async function processMessage(event, channel, message) {
     }
     
     if (theRun && theRun.status === "completed") {
-      const responses = await getResponse(event, theThread);
-      await prepMessage(event, responses[0].content[0].text.value);
+      let response = await getResponse(event, theThread);
+      response = response[0].content[0].text.value;
+      await prepMessage(event, response);
+      console.log(`Assistant: ${response}`);
     }
     else { throw new Error(`Debug: Something went wrong with OpenAI, please try your prompt again.`); }
 
@@ -385,7 +387,7 @@ client.on('messageCreate', async event => {
   let injectData = `${authorTag} (${isoDate}})`;
   let content = event.content;
   let message = content.replace(/<@\d+>/, injectData);
-  console.log(`User submitted message.`);
+  console.log(`User: ${message}`);
   try {
     keepTyping = true;
     sendTyping(event.channel);

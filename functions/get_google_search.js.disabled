@@ -4,9 +4,6 @@
 const fetch = require('node-fetch');
 const SERPAPI_APIKEY = process.env.SERPAPI_APIKEY;
 
-// openai
-const { get_gptresponse } = require('./get_gptresponse');
-
 const get_google_search = async ({ query }) => {
   try {
     console.log("get_google_search function was called");
@@ -23,3 +20,22 @@ const get_google_search = async ({ query }) => {
 }
 
 module.exports = { get_google_search };
+
+/*
+{
+  "name": "get_google_search",
+  "description": "This function connects to the Google Search API to retrieve search results from Google. Useful for looking up information about virtually anything.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "description": "The Google search query, optimized to target the best results for the inquiry in question."
+      }
+    },
+    "required": [
+      "query"
+    ]
+  }
+}
+*/

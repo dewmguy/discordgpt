@@ -4,9 +4,6 @@
 const fetch = require('node-fetch');
 const SERPAPI_APIKEY = process.env.SERPAPI_APIKEY;
 
-// openai
-const { get_gptresponse } = require('./get_gptresponse');
-
 const get_google_news = async ({ query }) => {
   try {
     console.log("get_google_news function was called");
@@ -23,3 +20,22 @@ const get_google_news = async ({ query }) => {
 }
 
 module.exports = { get_google_news };
+
+/*
+{
+  "name": "get_google_news",
+  "description": "This function connects to the Google News API to retrieve search results from Google News. Useful for looking up information about current events.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "description": "The Google News search query, optimized to target the best results for the inquiry in question."
+      }
+    },
+    "required": [
+      "query"
+    ]
+  }
+}
+*/

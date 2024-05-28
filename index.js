@@ -126,7 +126,7 @@ async function uploadVectorStore(event, thread, files) {
   catch (error) { await handleError(event, error); }
 }
 
-async function uploadFiles(event, thread) {
+async function uploadFiles1(event, thread) {
   let files = event.attachments;
   if (!files || files.size === 0) { return []; }
   const fileIds = [];
@@ -148,6 +148,32 @@ async function uploadFiles(event, thread) {
   return fileIds;
 }
 
+async function uploadFiles(event, thread) {
+  let files = event.attachments;
+  if (!files || files.size === 0) { return []; }
+  const fileIds = [];
+  let message = `The following files have been uploaded to this conversation thread for your reference: `;
+  for (const [, file] of files) {
+    try {
+      const response = await Axios({ method: 'get', url: file.url, responseType: 'arraybuffer' });
+      const fileObject = await toFile(Buffer.from(response.data), file.name);
+      
+      const isImage = file.name.match(/\.(jpeg|jpg|webp|png)$/i);
+      const filePurpose = isImage ? 'vision' : 'assistants';
+      const fileData = await openai.files.create({ file: fileObject, purpose: filePurpose });
+      fileIds.push(fileData.id);
+      await base(airtable_files).create({ 'OpenAiFileId': fileData.id, 'OpenAiThreadId': thread });
+      
+      message += `${fileData.filename} (${fileData.id}, ${fileData.purpose})`;
+      console.log(`File added to assistant: ${fileData.filename} (${fileData.id}, ${fileData.purpose})`);
+    }
+    catch (error) { await handleError(event, error); return null; }
+  }
+  await messageThread(event, thread, message);
+  console.log(message);
+  return fileIds;
+}
+
 async function releaseThreadLock(event, threadId) {
   try {
     const records = await base('threadLocks').select({ filterByFormula: `{OpenAiThreadId} = "${threadId}"` }).firstPage();
@@ -161,9 +187,9 @@ async function releaseThreadLock(event, threadId) {
 
 async function acquireThreadLock(event, threadId) {
   try {
+    console.log(`placing lock on thread ${threadId}`);
     const records = await base('threadLocks').select({ filterByFormula: `{OpenAiThreadId} = "${threadId}"` }).firstPage();
     if (records.length === 0) { await base('threadLocks').create({'OpenAiThreadId': threadId}); return true; }
-    console.log(`placing lock on thread ${threadId} until run completes`);
     return false;
   }
   catch (error) { await handleError(event, error); return null; }

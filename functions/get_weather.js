@@ -7,8 +7,7 @@ const OPENWEATHER_APIKEY = process.env.OPENWEATHER_APIKEY;
 const get_weather = async ({ location, report }) => {
   console.log("get_weather was called");
   try {
-    const city = location.split(',')[0];
-    let coordinates = await get_coordinate({ city });
+    let coordinates = await get_coordinate({ location });
     if (coordinates.error) throw new Error(coordinates.error);
     let { latitude, longitude } = coordinates;
     let excludeParts = "minutely,alerts";

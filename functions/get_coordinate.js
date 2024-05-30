@@ -26,3 +26,16 @@ const get_coordinate = async ({ location }) => {
 }
 
 module.exports = { get_coordinate };
+
+// not a function call
+
+/**
+ * This function is an async function that takes an object with a `location` property.
+ * It uses the OpenWeatherMap API to get the coordinates of a city based on the provided location.
+ * 
+ * @async
+ * @param {object} options - An object with a `location` property.
+ * @param {string} options.location - The name of the city to get the coordinates of.
+ * @returns {Promise<object|object>} - A Promise that resolves to an object with `latitude` and `longitude` properties
+ *                                    if the location is valid, or an object with an `error` property if the location is invalid.
+ */

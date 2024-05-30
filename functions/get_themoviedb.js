@@ -89,3 +89,59 @@ const get_themoviedb = async ({ mediaType, infoType, query, year, season, episod
 }
 
 module.exports = { get_themoviedb };
+
+/*
+{
+  "name": "get_themoviedb",
+  "description": "This function connects to The Movie Database API to fetch information about movies, TV shows (Series, Seasons, and Episodes), and people (actors, directors, etc.).",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "mediaType": {
+        "type": "string",
+        "description": "The type of inquiry in question, whether it's about a movie, tv show, or person (actor, director, etc.).",
+        "enum": ["movie","tv","person"]
+      },
+      "infoType": {
+        "type": "string",
+        "description": "The type of information about the media in question. Search will pull up several results based on the query. Popular and Trending are similar, trending is relevant to the current week whereas popular is relevant to all time. nowPlaying will show what's in theaters. upcoming is for movies soon to be released in theaters. tvDetails, seasonDetails, and episodeDetails will all provide a different specificity of information regarding a tv show.",
+        "enum": ["search","nowPlaying","popular","topRated","upcoming","trending","tvDetails","seasonDetails","episodeDetails"]
+      },
+      "query": {
+        "type": "string",
+        "description": "Required for infoType 'search'. The search query related to the mediaType in question. For example, the name of the actor, movie, or show."
+      },
+      "year": {
+        "type": "number",
+        "description": "The year of release of the media in question. Query the user for specificity or make your best educated guess."
+      },
+      "season": {
+        "type": "number",
+        "description": "If applicable, the season number for TV shows. Required for seasonDetails and episodeDetails."
+      },
+      "episode": {
+        "type": "number",
+        "description": "If applicable, the episode number for TV shows. Required for episodeDetails."
+      }
+    },
+    "required": [
+      "mediaType",
+      "infoType",
+      "year"
+    ]
+  }
+}
+*/
+
+/**
+ * This function is an async function that connects to The Movie Database API to fetch information about movies, TV shows, and people.
+ *
+ * @param {Object} params - The parameters for the function.
+ * @param {string} params.mediaType - The type of inquiry (movie, tv, person).
+ * @param {string} params.infoType - The type of information about the media in question.
+ * @param {string} params.query - The search query related to the mediaType in question.
+ * @param {number} params.year - The year of release of the media in question.
+ * @param {number} [params.season] - The season number for TV shows.
+ * @param {number} [params.episode] - The episode number for TV shows.
+ * @return {Promise<Object>} A promise that resolves to the JSON response from the API.
+ */

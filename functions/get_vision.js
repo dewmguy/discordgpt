@@ -60,3 +60,15 @@ module.exports = { get_vision };
   }
 }
 */
+
+/**
+ * This function will connect you to the ChatGPT API for image analysis. It takes an object with the following properties:
+ * - `prompt`: A string describing the query the user has about the given images.
+ * - `imageURLs`: An array of strings representing the URLs associated with the images the user attached to their discord message.
+ * If the function is successful, it will return an object with the following properties:
+ * - `content`: An array of objects, each representing a message in the chat. Each object has the following properties:
+ *   - `type`: A string describing the type of content (either "text" or "image_url").
+ *   - `text`: A string containing the text of the message (only present if `type` is "text").
+ *   - `image_url`: An object containing the URL of the image (only present if `type` is "image_url").
+ * If there is an error during the image analysis process, the function will return an object with an `error` property containing the error message.
+ */

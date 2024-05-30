@@ -73,6 +73,7 @@ module.exports = { get_dalle_image };
 /*
 {
   "name": "get_dalle_image",
+  "description": "This function will connect you to Dalle 3 API for image generation. Feel free to format, but do not exclude or alter the data provided by the function.",
   "parameters": {
     "type": "object",
     "properties": {
@@ -84,7 +85,14 @@ module.exports = { get_dalle_image };
     "required": [
       "prompt"
     ]
-  },
-  "description": "This function will connect you to Dalle 3 API for image generation."
+  }
 }
 */
+
+/**
+ * This function will connect you to Dalle 3 API for image generation. It takes a prompt as a string, which is the description of the image to be created by Dall-e 3. The function will then return an object with the following properties:
+ * - `duration`: a string describing the duration of the image generation process.
+ * - `revisedPrompt`: a string describing the optimized prompt used by Dall-e 3.
+ * - `imageUrl`: a string representing the URL of the generated image.
+ * If there is an error during the image generation process, the function will return an object with an `error` property containing the error message.
+ */

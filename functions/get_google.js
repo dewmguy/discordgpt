@@ -82,6 +82,7 @@ module.exports = { get_google };
 /*
 {
   "name": "get_google",
+  "description": "This function connects to the Google Search API to retrieve search results from Google. It can perform web searches, news searches, and sports searches based on the searchType parameter. all urls must be wrappted in angle brackets: [link description](<link url>)",
   "parameters": {
     "type": "object",
     "properties": {
@@ -103,7 +104,16 @@ module.exports = { get_google };
       "query",
       "searchType"
     ]
-  },
-  "description": "This function connects to the Google Search API to retrieve search results from Google. It can perform web searches, news searches, and sports searches based on the searchType parameter."
+  }
 }
 */
+
+/**
+ * This function connects to the Google Search API to retrieve search results from Google. It can perform web searches, news searches,
+ * and sports searches based on the searchType parameter. All URLs must be wrapped in angle brackets: [link description](<link url>).
+ *
+ * @param {Object} parameters - An object containing the following properties:
+ * @param {string} parameters.query - The Google search query, optimized to target the best results for the inquiry in question.
+ * @param {string} parameters.searchType - The type of search to perform. Can be 'web', 'news', or 'sports'.
+ * @return {Promise<Array|Object>} An array of search results or an object with an error message.
+ */

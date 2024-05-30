@@ -401,3 +401,20 @@ client.once(Events.ClientReady, botUser => {
 
 //login
 client.login(process.env.DISCORD_TOKEN);
+
+/**
+This is the entry point for the Discord bot.
+
+The bot is initiated by calling `client.login(process.env.DISCORD_TOKEN)`, which authenticates the bot with the Discord API using the `DISCORD_TOKEN` environment variable.
+
+The bot registers two event listeners:
+
+- `threadDelete`: This event is triggered when a thread is deleted. It calls the `processDeleteThread` function to handle the deletion.
+- `messageCreate`: This event is triggered when a message is created. It checks if the message is a valid user message by checking various conditions. If the message is valid, it injects the user's ID and timestamp into the message, sends a typing indicator while processing the message, and calls the `processMessage` function to handle the message.
+
+The bot also has a `ClientReady` event listener that updates the bot's status to "online" and logs a message indicating that the bot is online.
+
+The `keepTyping` variable is used to keep track of whether the bot is currently typing in a channel. This is used to control the sending of typing indicators.
+
+Overall, this code sets up the Discord bot and handles various events and interactions with the Discord API.
+*/

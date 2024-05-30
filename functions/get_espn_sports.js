@@ -88,3 +88,92 @@ const get_espn_sports = async ({ sport, league, infoType, team, location, player
 }
 
 module.exports = { get_espn_sports };
+
+/*
+{
+  "name": "get_espn_sports",
+  "description": "This function connects to the ESPN API for access to a plethora of information about American sports.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "sport": {
+        "type": "string",
+        "description": "The sport being requested.",
+        "enum": [
+          "football",
+          "baseball",
+          "hockey",
+          "basketball"
+        ]
+      },
+      "league": {
+        "type": "string",
+        "description": "The league being requested.",
+        "enum": [
+          "nfl",
+          "mlb",
+          "nhl",
+          "nba",
+          "wnba",
+          "college-football",
+          "college-basketball",
+          "womens-college-basketball",
+          "mens-college-basketball"
+        ]
+      },
+      "infoType": {
+        "type": "string",
+        "description": "Type of information requested.",
+        "enum": [
+          "news",
+          "scores",
+          "team",
+          "allteams",
+          "playerBio",
+          "playerStats"
+        ]
+      },
+      "team": {
+        "type": "string",
+        "description": "If applicable, the name of the team in question."
+      },
+      "location": {
+        "type": "string",
+        "description": "If applicable, the location of the team in question. Professional sports inquiries requires the name of the city and college sports inquries requires the name of the state."
+      },
+      "playerName": {
+        "type": "string",
+        "description": "If applicable, the first and last name of the player in question."
+      },
+      "season": {
+        "type": "string",
+        "description": "If applicable, the year of the league season in question. Default to current year."
+      }
+    },
+    "required": [
+      "sport",
+      "league",
+      "infoType",
+      "location",
+      "season"
+    ]
+  }
+}
+*/
+
+/**
+ * This function is a wrapper for the ESPN API, which provides various sports-related information. 
+ * It takes in parameters such as the sport, league, infoType, location, and season of interest, 
+ * and returns the corresponding information from the ESPN database. 
+ * 
+ * Parameters:
+ * - sport: The sport being requested. (string)
+ * - league: The league being requested. (string)
+ * - infoType: The type of information requested. (string)
+ * - location: The location of the team in question. Professional sports inquiries require the name of the city, 
+ *   while college sports inquiries require the name of the state. (string)
+ * - season: The year of the league season in question. Default to current year. (string)
+ * 
+ * Returns:
+ * - The requested information from the ESPN database.
+ */

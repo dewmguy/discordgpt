@@ -126,7 +126,7 @@ async function uploadVectorStore(event, thread, files) {
   catch (error) { await handleError(event, error); }
 }
 
-async function uploadFiles1(event, thread) {
+async function uploadFiles(event, thread) {
   let files = event.attachments;
   if (!files || files.size === 0) { return []; }
   const fileIds = [];
@@ -140,32 +140,6 @@ async function uploadFiles1(event, thread) {
       await base(airtable_files).create({ 'OpenAiFileId': fileData.id, 'OpenAiThreadId': thread });
       message += `${fileData.filename} (${fileData.id}, ${fileData.purpose})`;
       console.log(`file added to assistant: ${fileData.filename} (${fileData.id}, ${fileData.purpose})`);
-    }
-    catch (error) { await handleError(event, error); return null; }
-  }
-  await messageThread(event, thread, message);
-  console.log(message);
-  return fileIds;
-}
-
-async function uploadFiles(event, thread) {
-  let files = event.attachments;
-  if (!files || files.size === 0) { return []; }
-  const fileIds = [];
-  let message = `The following files have been uploaded to this conversation thread for your reference: `;
-  for (const [, file] of files) {
-    try {
-      const response = await Axios({ method: 'get', url: file.url, responseType: 'arraybuffer' });
-      const fileObject = await toFile(Buffer.from(response.data), file.name);
-      
-      const isImage = file.name.match(/\.(jpeg|jpg|webp|png)$/i);
-      const filePurpose = isImage ? 'vision' : 'assistants';
-      const fileData = await openai.files.create({ file: fileObject, purpose: filePurpose });
-      fileIds.push(fileData.id);
-      await base(airtable_files).create({ 'OpenAiFileId': fileData.id, 'OpenAiThreadId': thread });
-      
-      message += `${fileData.filename} (${fileData.id}, ${fileData.purpose})`;
-      console.log(`File added to assistant: ${fileData.filename} (${fileData.id}, ${fileData.purpose})`);
     }
     catch (error) { await handleError(event, error); return null; }
   }
@@ -270,10 +244,32 @@ async function processMessage(event, channel, message) {
     
     if (event.attachments.size > 0) {
       console.log(`User uploaded files.`);
-      const files = await uploadFiles(event, theThread);
-      if (files.length > 0) { await uploadVectorStore(event, theThread, files); }
+
+      const supportedFileTypes = [".c", ".cs", ".cpp", ".doc", ".docx", ".html", ".java", ".json", ".md", ".pdf", ".php", ".pptx", ".py", ".rb", ".tex", ".txt", ".css", ".js", ".sh", ".ts"];
+      const imageFileTypes = [".jpg", ".jpeg", ".png", ".webp"];
+
+      let nonImageFiles = [];
+      let imageUrls = [];
+
+      event.attachments.forEach(attachment => { // Iterate over attachments and separate image files from non-image files
+        const fileExtension = attachment.name.split('.').pop().toLowerCase();
+        if (imageFileTypes.includes(`.${fileExtension}`)) { imageUrls.push(attachment.url); }
+        else if (supportedFileTypes.includes(`.${fileExtension}`)) { nonImageFiles.push(attachment); }
+      });
+
+      if (imageUrls.length > 0) { // Append image URLs to the prompt
+        console.log('image files were found attached to the message');
+        const imageUrlText = imageUrls.map(url => `Image URL: ${url}`).join('\n');
+        message += `\n${imageUrlText}`;
+      }
+
+      if (nonImageFiles.length > 0) { // Upload non-image files to the vector store
+        console.log('documents were found attached to the message');
+        const files = await uploadFiles(event, theThread, nonImageFiles);
+        if (files.length > 0) { await uploadVectorStore(event, theThread, files); }
+      }
     }
-    
+
     await messageThread(event, theThread, message);
     let theRun = await createRun(event, theThread);
 

@@ -21,7 +21,7 @@ const get_google = async ({ query, searchType }) => {
         break;
     }
 
-    const response = await fetch(serpApiUrl, { method: 'GET' });
+    const response = await fetch(serpApiUrl);
     const data = await response.json();
     let results;
 

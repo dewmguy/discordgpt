@@ -6,6 +6,7 @@ const RAPIDAPI_APIKEY = process.env.RAPIDAPI_APIKEY;
 
 const get_article = async ({ url }) => {
   console.log("get_article function was called");
+  console.log(`pulling article data from url: ${url}`);
   try {
     
     const link = `https://article-extractor2.p.rapidapi.com/article/parse?url=${encodeURIComponent(url)}`;

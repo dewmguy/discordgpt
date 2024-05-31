@@ -10,6 +10,7 @@ fs.readdirSync(folderPath).forEach(file => {
       const moduleName = path.parse(file).name;
       const modulePath = path.join(folderPath, file);
       exportedModules[moduleName] = require(modulePath)[moduleName];
+      console.log(`Loaded Module: ${moduleName}`);
     }
     catch (error) { console.error(`Failed to load module ${file}: ${error.message}`); }
   }

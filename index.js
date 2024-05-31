@@ -81,6 +81,7 @@ async function splitMessage(content, maxLength = 1970) {
 }
 
 async function prepMessage(event, content) {
+  content = content.replace(/【[^】]*†[^】]*】/g, ''); // remove kb sourcing
   const splitContent = await splitMessage(content);
   for (const message of splitContent) {
     await sleep(500);

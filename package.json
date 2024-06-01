@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/dewmguy/discordgpt#readme",
   "dependencies": {
+    "@fabricio-191/valve-server-query": "^4.1.9",
     "airtable": "^0.12.2",
     "axios": "^1.6.8",
     "cheerio": "^1.0.0-rc.12",

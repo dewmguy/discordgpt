@@ -31,6 +31,7 @@
     "imagekit": "^5.0.1",
     "openai": "^4.38.5",
     "path": "^0.12.7",
-    "serpapi": "^2.1.0"
+    "serpapi": "^2.1.0",
+    "turndown": "^7.2.0"
   }
 }

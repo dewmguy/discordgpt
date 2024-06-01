@@ -1,3 +1,59 @@
+// get_wikipedia.js
+
+const { get_search } = require('./get_search');
+const { get_article } = require('./get_article');
+const fetch = require('node-fetch');
+
+const get_wikipedia = async ({ query }) => {
+  console.log("get_wikipedia was called");
+  console.log(`query: "${query}"`);
+
+  try {
+    query = `wikipedia ${query}`;
+    const searchType = 'web';
+    const searchResults = await get_search({ query, searchType });
+
+    let url;
+    for (let result of searchResults) {
+      console.log(result.link);
+      if (result.link.includes('wikipedia.org')) {  // search the results and pull the first wikipedia result
+        url = result.link;
+        console.log('article found');
+        break;
+      }
+    }
+    if (!url) { throw new Error(`No relevant Wikipedia article found for query "${query}"`); }
+    
+    const directive = `You are a professional copy editor, strip and summarize the contents of the article provided leaving the most important and relevant content related to the query "${query}."`;
+    const scrape = await get_article({ url, directive });
+
+    // Fetch the summary from Wikipedia's API
+    const title = url.split('/').pop();
+    console.log(title);
+    const summaryURL = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+    const response = await fetch(summaryURL);
+    const result = await response.json();
+
+    if (result || scrape) {
+      return {
+        link: url,
+        excerpt: result.extract,
+        summary: scrape
+      };
+    }
+    else { throw new Error("There is something wrong with the response from Wikipedia."); }
+  }
+  catch (error) {
+    console.log("Error:", error.message);
+    return { error: error.message };
+  }
+};
+
+module.exports = { get_wikipedia };
+
+
+/* get_wikipedia.js
+
 const fetch = require('node-fetch');
 
 const get_wikipedia = async ({ query }) => {

@@ -20,19 +20,19 @@ const get_espn_sports = async ({ sport, league, infoType, team, location, player
     }
 
     let basePath = `http://site.api.espn.com/apis/site/v2/sports/${sport}/${league}`;
-    let url;
+    let data, url;
 
     switch (infoType) {
       case 'news':
         url = `${basePath}/news`; 
         break;
-      case 'scores': // data.events
+      case 'scores':
         url = `${basePath}/scoreboard`;
         break;
-      case 'team': // data.team
+      case 'team':
         url = `${basePath}/teams/${location}`;
         break;
-      case 'allteams': // data.sports[0].leagues[0]
+      case 'allteams':
         url = `${basePath}/teams`;
         break;
       case 'playerStats':
@@ -56,7 +56,7 @@ const get_espn_sports = async ({ sport, league, infoType, team, location, player
           if (playerName && (playerData.fullName === playerName || playerData.lastName === playerName)) {
             console.log(`Player match found: ${playerData.fullName}`);
             playerBio = playerData;
-            if(infoType == 'playerBio' && playerBio) { return playerBio; break; }
+            if(infoType == 'playerBio' && playerBio) { break; return playerBio; }
           }
         }
         if(infoType == 'playerStats' && playerBio) {
@@ -71,13 +71,15 @@ const get_espn_sports = async ({ sport, league, infoType, team, location, player
       default:
         throw new Error('Invalid information type requested');
     }
-    if(infoType !== 'player') {
+    if(infoType !== 'playerStats' && infoType !== 'playerBio') {
       console.log(`api url: ${url}`);
       const response = await fetch(url, { method: 'GET' });
       data = await response.json();
       if(infoType == 'scores') { data = data.events; }
       if(infoType == 'team') { data = data.team; }
       if(infoType == 'allteams') { data = data.sports[0].leagues[0]; }
+      console.log(data);
+      return data;
     }
     return data;
   }

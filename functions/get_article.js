@@ -1,12 +1,14 @@
 // get_article.js
 
-const fetch = require('node-fetch');
 const { get_gptresponse } = require('./get_gptresponse');
+const fetch = require('node-fetch');
+const TurndownService = require('turndown');
+const turndownService = new TurndownService();
 const RAPIDAPI_APIKEY = process.env.RAPIDAPI_APIKEY;
 
-const get_article = async ({ url }) => {
+const get_article = async ({ url, directive }) => {
   console.log("get_article function was called");
-  console.log(`pulling article data from url: ${url}`);
+  console.log(`pulling data from article ${url}`);
   try {
     
     const link = `https://article-extractor2.p.rapidapi.com/article/parse?url=${encodeURIComponent(url)}`;
@@ -19,8 +21,8 @@ const get_article = async ({ url }) => {
     };
     const response = await fetch(link, options);
     const data = await response.text();
-    const directive = 'You are a professional copy editor, strip and summarize the contents of the article data provided leaving the most important and relevant content. This content will not be read by a human, the output will return to an assitant api for further analysis.';
-    const summary = await get_gptresponse(directive,data);
+    markdown = await turndownService.turndown(data);
+    const summary = await get_gptresponse(directive,markdown);
     return summary;
   }
   catch (error) {

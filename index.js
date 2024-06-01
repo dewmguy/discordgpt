@@ -112,6 +112,12 @@ async function getRun(event, thread, run) {
   catch (error) { await handleError(event, error); return null; }
 }
 
+async function cancelRun(event, thread, run) {
+  console.log(`Canceling ${run} on ${thread}`);
+  try { return await openai.beta.threads.runs.cancel(thread,run); }
+  catch (error) { await handleError(event, error); return null; }
+}
+
 async function getResponse(event, thread) {
   try { const messages = await openai.beta.threads.messages.list( thread, { limit: 1 } ); return messages.data; }
   catch (error) { await handleError(event, error); return null; }
@@ -153,7 +159,7 @@ async function releaseThreadLock(event, threadId) {
   try {
     const records = await base('threadLocks').select({ filterByFormula: `{OpenAiThreadId} = "${threadId}"` }).firstPage();
     if (records.length > 0) {
-      console.log(`released lock on thread ${threadId}`);
+      console.log(`releasing ${threadId}`);
       const recordId = records[0].id; await base('threadLocks').destroy(recordId);
     }
   }
@@ -162,7 +168,7 @@ async function releaseThreadLock(event, threadId) {
 
 async function acquireThreadLock(event, threadId) {
   try {
-    console.log(`placing lock on thread ${threadId}`);
+    console.log(`locking ${threadId}`);
     const records = await base('threadLocks').select({ filterByFormula: `{OpenAiThreadId} = "${threadId}"` }).firstPage();
     if (records.length === 0) { await base('threadLocks').create({'OpenAiThreadId': threadId}); return true; }
     return false;
@@ -184,7 +190,7 @@ async function saveThread(event, channel, thread, store) {
 async function createVectorStore(event, thread) {
   try {
     const createdStore = await openai.beta.vectorStores.create({ name: `Thread ${thread}` });
-    console.log(`Created vector store: ${createdStore.id}`);
+    console.log(`created vector store: ${createdStore.id}`);
     return createdStore.id;
   }
   catch (error) { await handleError(event, error); return null; }
@@ -193,7 +199,7 @@ async function createVectorStore(event, thread) {
 async function createThread(event, channel) {
   try {
     const createdThread = await openai.beta.threads.create();
-    console.log(`Created thread: ${createdThread.id}`);
+    console.log(`created ${createdThread.id}`);
     return createdThread.id;
   }
   catch (error) { await handleError(event, error); return null; }
@@ -205,12 +211,12 @@ async function getStore(channel) {
     if (records.length) { return records[0].get('OpenAiStoreId'); }
     else { return null; }
   }
-  catch (error) { console.error(`Error in getStore for channel ID ${channel}: ${error}`); }
+  catch (error) { console.error(`error in getStore for channel ${channel}: ${error}`); }
 }
 
 async function prepNewThread(event, channel) {
   try {
-    console.log(`thread does not exist for this channel ${channel}`);
+    console.log(`thread does not exist for channel ${channel}`);
     const threadId = await createThread(event, channel);
     const vectorStoreId = await createVectorStore(event, threadId);
     await saveThread(event, channel, threadId, vectorStoreId);
@@ -224,7 +230,7 @@ async function getThread(channel) {
     const records = await base(airtable_table).select({ filterByFormula: `{DiscordThreadId} = "${channel}"` }).firstPage();
     if (records.length) {
       const thread = records[0].get('OpenAiThreadId');
-      console.log(`recovered thread ${thread} from table ${airtable_table}`);
+      console.log(`recovered ${thread} from table ${airtable_table}`);
       return thread;
     }
     else { return null; }
@@ -239,12 +245,12 @@ async function processMessage(event, channel, message) {
     theStore = await getStore(channel);
 
     while (!(await acquireThreadLock(event, theThread)) && retries > 0) { await sleep(1000); retries--; }
-    if (retries === 0) { throw new Error("There is an error in this message thread, make a new thread."); }
+    if (retries === 0) { throw new Error("there is an error in this message thread, make a new thread."); }
     
     sendTyping(event.channel);
     
     if (event.attachments.size > 0) {
-      console.log(`User uploaded files.`);
+      console.log(`user uploaded files.`);
 
       const supportedFileTypes = [".c", ".cs", ".cpp", ".doc", ".docx", ".html", ".java", ".json", ".md", ".pdf", ".php", ".pptx", ".py", ".rb", ".tex", ".txt", ".css", ".js", ".sh", ".ts"];
       const imageFileTypes = [".jpg", ".jpeg", ".png", ".webp"];
@@ -303,7 +309,10 @@ async function processMessage(event, channel, message) {
       await prepMessage(event, response);
       console.log(`Assistant: ${response}`);
     }
-    else { throw new Error(`Debug: Something went wrong with OpenAI, please try your prompt again.`); }
+    else {
+      await cancelRun(event, theThread, theRun.id);
+      throw new Error(`Something went wrong, cancelling your run (${theRun.id}) on thread (${thread}), please try your prompt again.`);
+    }
 
   }
   catch (error) { await handleError(event, error); }

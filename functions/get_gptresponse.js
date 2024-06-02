@@ -14,6 +14,7 @@ const get_gptresponse = async (directive, data) => {
 			model: "gpt-4o",
 		});
     const response = completion.choices[0]?.message?.content;
+		console.log(`the response was: ${response}`);
 		return response;
 	}
 	catch (error) { return { error: error.message }; }

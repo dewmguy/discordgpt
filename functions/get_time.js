@@ -1,7 +1,6 @@
 // get_time.js
 
 const fetch = require('node-fetch');
-const STOCKPRICEAPIKEY = process.env.STOCKMARKETAPI_APIKEY;
 
 const get_time = async ({ area, location, region }) => {
   console.log("get_time function was called");

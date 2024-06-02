@@ -90,42 +90,48 @@ async function prepMessage(event, content) {
 }
 
 async function sendMessage(event, content) {
+  console.log(`sending a message to discord`);
   try {
     const message = await event.reply(content);
-    console.log(`openai returned message.`);
+    console.log(`message sent`);
   }
   catch (error) { await handleError(event, error); }
 }
 
-async function messageThread(event, thread, content) {
-  try { return openai.beta.threads.messages.create( thread, { role: "user", content } ); }
+async function messageThread(event, threadID, content) {
+  console.log(`creating a message on ${threadID}`);
+  try { return openai.beta.threads.messages.create( threadID, { role: "user", content } ); }
   catch (error) { await handleError(event, error); return null; }
 }
 
-async function createRun(event, thread) {
-  try { return await openai.beta.threads.runs.createAndPoll(thread, { assistant_id: process.env.OPENAI_ASSISTANTID }); }
+async function createRun(event, threadID) {
+  console.log(`creating a run on ${threadID}`);
+  try { return await openai.beta.threads.runs.createAndPoll(threadID, { assistant_id: process.env.OPENAI_ASSISTANTID }); }
   catch (error) { await handleError(event, error); return null; }
 }
 
-async function getRun(event, thread, run) {
-  try { return await openai.beta.threads.runs.retrieve(thread, run); }
+async function getRun(event, threadID, run) {
+  console.log(`retrieving ${run} on ${threadID}`);
+  try { return await openai.beta.threads.runs.retrieve(threadID, run); }
   catch (error) { await handleError(event, error); return null; }
 }
 
-async function cancelRun(event, thread, run) {
-  console.log(`Canceling ${run} on ${thread}`);
-  try { return await openai.beta.threads.runs.cancel(thread,run); }
+async function cancelRun(event, threadID, run) {
+  console.log(`canceling ${run} on ${threadID}`);
+  try { return await openai.beta.threads.runs.cancel(threadID,run); }
   catch (error) { await handleError(event, error); return null; }
 }
 
-async function getResponse(event, thread) {
-  try { const messages = await openai.beta.threads.messages.list( thread, { limit: 1 } ); return messages.data; }
+async function getResponse(event, threadID) {
+  console.log(`retrieving message from ${threadID}`);
+  try { const messages = await openai.beta.threads.messages.list( threadID, { limit: 1 } ); return messages.data; }
   catch (error) { await handleError(event, error); return null; }
 }
 
-async function uploadVectorStore(event, thread, files) {
+async function uploadVectorStore(event, threadID, files) {
+  console.log(`uploading files to vector store on ${threadID}`);
   try {
-    const records = await base(airtable_table).select({ filterByFormula: `{OpenAiThreadId}='${thread}'` }).firstPage();
+    const records = await base(airtable_table).select({ filterByFormula: `{OpenAiThreadId}='${threadID}'` }).firstPage();
     let storeID = records.length > 0 ? records[0].get('OpenAiStoreId') : null;
     if (storeID) { await openai.beta.vectorStores.fileBatches.createAndPoll(storeID, { file_ids: files }); }
     console.log(`Files uploaded to vector store: ${files}`);
@@ -133,79 +139,86 @@ async function uploadVectorStore(event, thread, files) {
   catch (error) { await handleError(event, error); }
 }
 
-async function uploadFiles(event, thread) {
+async function uploadFiles(event, threadID) {
+  console.log(`uploading files from ${threadID}`);
   let files = event.attachments;
   if (!files || files.size === 0) { return []; }
   const fileIds = [];
-  let message = `the following files have been uploaded to this conversation thread for your reference: `;
+  let message = `the following files have been uploaded to ${threadID} for your reference: `;
   for (const [, file] of files) {
     try {
       const response = await Axios({ method: 'get', url: file.url, responseType: 'arraybuffer' });
       const fileObject = await toFile(Buffer.from(response.data), file.name);
       const fileData = await openai.files.create({ file: fileObject, purpose: 'assistants' });
       fileIds.push(fileData.id);
-      await base(airtable_files).create({ 'OpenAiFileId': fileData.id, 'OpenAiThreadId': thread });
+      await base(airtable_files).create({ 'OpenAiFileId': fileData.id, 'OpenAiThreadId': threadID });
       message += `${fileData.filename} (${fileData.id}, ${fileData.purpose})`;
       console.log(`file added to assistant: ${fileData.filename} (${fileData.id}, ${fileData.purpose})`);
     }
     catch (error) { await handleError(event, error); return null; }
   }
-  await messageThread(event, thread, message);
+  await messageThread(event, threadID, message);
   console.log(message);
   return fileIds;
 }
 
 async function releaseThreadLock(event, threadId) {
+  console.log(`releasing ${threadId}`);
   try {
     const records = await base('threadLocks').select({ filterByFormula: `{OpenAiThreadId} = "${threadId}"` }).firstPage();
     if (records.length > 0) {
-      console.log(`releasing ${threadId}`);
       const recordId = records[0].id; await base('threadLocks').destroy(recordId);
+      console.log(`${threadId} released`);
     }
   }
   catch (error) { await handleError(event, error); }
 }
 
 async function acquireThreadLock(event, threadId) {
+  console.log(`locking ${threadId}`);
   try {
-    console.log(`locking ${threadId}`);
     const records = await base('threadLocks').select({ filterByFormula: `{OpenAiThreadId} = "${threadId}"` }).firstPage();
-    if (records.length === 0) { await base('threadLocks').create({'OpenAiThreadId': threadId}); return true; }
+    if (records.length === 0) { await base('threadLocks').create({'OpenAiThreadId': threadId}); console.log(`${threadId} locked`); return true; }
     return false;
   }
   catch (error) { await handleError(event, error); return null; }
 }
 
-async function saveThread(event, channel, thread, store) {
+async function saveThread(event, channel, threadID, store) {
+  console.log(`saving ${threadID} to database`);
   try {
     await base(airtable_table).create({
       'DiscordThreadId': channel,
-      'OpenAiThreadId': thread,
+      'OpenAiThreadId': threadID,
       'OpenAiStoreId': store
     });
+    console.log(`${threadID} saved to database`);
   }
   catch (error) { await handleError(event, error); return null; }
 }
 
-async function createVectorStore(event, thread) {
+async function createVectorStore(event, threadID) {
+  console.log(`creating vector store for ${threadID}`);
   try {
-    const createdStore = await openai.beta.vectorStores.create({ name: `Thread ${thread}` });
-    console.log(`created vector store: ${createdStore.id}`);
+    const createdStore = await openai.beta.vectorStores.create({ name: `Thread ${threadID}` });
+    console.log(`vector store ${createdStore.id} created`);
     return createdStore.id;
   }
   catch (error) { await handleError(event, error); return null; }
 }
 
 async function createThread(event, channel) {
+  console.log(`creating thread for channel ${channel}`);
   try {
     const createdThread = await openai.beta.threads.create();
-    console.log(`created ${createdThread.id}`);
+    console.log(`${createdThread.id} created`);
     return createdThread.id;
   }
   catch (error) { await handleError(event, error); return null; }
 }
 
 async function getStore(channel) {
+  console.log(`retrieving store for channel ${channel}`);
   try {
     const records = await base(airtable_table).select({ filterByFormula: `{DiscordThreadId} = "${channel}"` }).firstPage();
     if (records.length) { return records[0].get('OpenAiStoreId'); }
@@ -215,8 +228,8 @@ async function getStore(channel) {
 }
 
 async function prepNewThread(event, channel) {
+  console.log(`thread does not exist for channel ${channel}`);
   try {
-    console.log(`thread does not exist for channel ${channel}`);
     const threadId = await createThread(event, channel);
     const vectorStoreId = await createVectorStore(event, threadId);
     await saveThread(event, channel, threadId, vectorStoreId);
@@ -226,12 +239,13 @@ async function prepNewThread(event, channel) {
 }
 
 async function getThread(channel) {
+  console.log(`rerieving thread for channel ${channel}`);
   try {
     const records = await base(airtable_table).select({ filterByFormula: `{DiscordThreadId} = "${channel}"` }).firstPage();
     if (records.length) {
-      const thread = records[0].get('OpenAiThreadId');
-      console.log(`recovered ${thread} from table ${airtable_table}`);
-      return thread;
+      const threadID = records[0].get('OpenAiThreadId');
+      console.log(`recovered ${threadID} from table ${airtable_table}`);
+      return threadID;
     }
     else { return null; }
   }
@@ -239,6 +253,7 @@ async function getThread(channel) {
 }
 
 async function processMessage(event, channel, message) {
+  console.log(`processing message on channel ${channel}`);
   let theThread, theStore, retries = 180;
   try {
     theThread = await getThread(channel) || await prepNewThread(event, channel);
@@ -281,11 +296,11 @@ async function processMessage(event, channel, message) {
     let theRun = await createRun(event, theThread);
 
     if (theRun && theRun.status === "requires_action") {
-      console.log(`User initiated run.`);
+      console.log(`function call initiated`);
       const getrun = await getRun(event, theThread, theRun.id);
       let functionCallPromises = getrun.required_action.submit_tool_outputs.tool_calls.map(async (functionCall) => {
-        console.log(`User initiated function calling.`);
-        console.log(`functionCall Object:`,JSON.stringify(functionCall));
+        console.log(`assistant submitting function call`);
+        console.log(JSON.stringify(functionCall));
         try {
           let callId = functionCall.id;
           let args = JSON.parse(functionCall.function.arguments);
@@ -307,11 +322,11 @@ async function processMessage(event, channel, message) {
       let response = await getResponse(event, theThread);
       response = response[0].content[0].text.value;
       await prepMessage(event, response);
-      console.log(`Assistant: ${response}`);
+      console.log(`--- Assistant: ${response}`);
     }
     else {
       await cancelRun(event, theThread, theRun.id);
-      throw new Error(`Something went wrong, cancelling your run (${theRun.id}) on thread (${thread}), please try your prompt again.`);
+      throw new Error(`something went wrong. cancelled ${theRun.id} on ${theThread}. try your prompt again.`);
     }
 
   }
@@ -319,37 +334,41 @@ async function processMessage(event, channel, message) {
   finally { if (theThread) { await releaseThreadLock(event, theThread); } }
 }
 
-async function deleteFiles(thread) {
+async function deleteFiles(threadID) {
+  console.log(`deleting files in ${threadID}`);
   try {
-    const records = await base(airtable_files).select({ filterByFormula: `{OpenAiThreadId} = '${thread}'` }).firstPage();
+    const records = await base(airtable_files).select({ filterByFormula: `{OpenAiThreadId} = '${threadID}'` }).firstPage();
     if (records.length > 0) {
       const deletions = records.map(async record => {
         await openai.files.del(record.get('OpenAiFileId'));
         await base(airtable_files).destroy(record.id);
       });
       await Promise.all(deletions);
-      console.log(`Files and records deleted for thread ID ${thread}.`);
+      console.log(`Files and records deleted for ${threadID}.`);
     }
-    else { console.log(`No files to delete for thread ID ${thread}.`); }
+    else { console.log(`No files to delete for ${threadID}.`); }
   }
-  catch (error) { console.error(`Error in deleteFiles for thread ID ${thread}: ${error}`); }
+  catch (error) { console.error(`Error in deleteFiles for ${threadID}: ${error}`); }
 }
 
 async function deleteVectorStore(store) {
+  console.log(`deleting vector store ${store}`);
   await openai.beta.vectorStores.del(store);
-  console.log(`vector store ${store} deleted.`);
+  console.log(`vector store ${store} deleted`);
 }
 
-async function deleteLock(thread) {
+async function deleteLock(threadID) {
+  console.log(`deleting lock on ${threadID}`);
   try {
-    const records = await base(airtable_locks).select({ filterByFormula: `{OpenAiThreadId} = '${thread}'` }).firstPage();
+    const records = await base(airtable_locks).select({ filterByFormula: `{OpenAiThreadId} = '${threadID}'` }).firstPage();
     if (records.length == 1) { await Promise.all(records.map(record => base(airtable_locks).destroy(record.id))); }
-    else { console.log(`no thread to delete in table ${airtable_locks}`); }
+    else { console.log(`no thread to delete in ${airtable_locks}`); }
   }
-  catch (error) { console.error(`Error in deleteLock for thread ID ${thread}: ${error}`); }
+  catch (error) { console.error(`Error in deleteLock for ${threadID}: ${error}`); }
 }
 
 async function deleteThread(channel) {
+  console.log(`deleting thread for channel ${channel}`);
   try {
     const records = await base(airtable_table).select({ filterByFormula: `{DiscordThreadId} = '${channel}'` }).firstPage();
     if (records.length == 1) { await Promise.all(records.map(record => base(airtable_table).destroy(record.id))); }
@@ -359,15 +378,17 @@ async function deleteThread(channel) {
 }
 
 async function processDeleteThread(channel) {
+  console.log(`processing deletion of discord channel ${channel}`);
   try {
     const store = await getStore(channel);
-    const thread = await getThread(channel);
+    const threadID = await getThread(channel);
     await deleteVectorStore(store);
     await deleteThread(channel);
-    await deleteLock(thread);
-    await deleteFiles(thread);
+    await deleteLock(threadID);
+    await deleteFiles(threadID);
+    console.log(`channel cleanup completed`);
   }
-  catch (error) { console.error(`Error in processDeleteThread for thread ID ${channel}: ${error}`); }
+  catch (error) { console.error(`Error in processDeleteThread for discord channel ${channel}: ${error}`); }
 }
 
 function sendTyping(channel) {
@@ -379,21 +400,24 @@ let keepTyping = true;
 
 //discord thread deleted
 client.on('threadDelete', async event => {
+  console.log(`event delete thread triggered`);
   await processDeleteThread(event.id);
-  console.log(`User deleted thread.`);
+  console.log(`event delete thread completed`);
 });
 
 //main logic
 client.on('messageCreate', async event => {
+  console.log(`event create message triggered`);
   if (event.author.bot || event.content.includes("@here") || event.content.includes("@everyone") || event.content.includes("@skynet") || !event.mentions.has(client.user.id)) { return; }
   let channel = event.channel.id;
   let authorID = event.author.id;
   let authorTag = `<@${authorID}>`;
   let isoDate = new Date().toISOString();
-  let injectData = `${authorTag} (${isoDate}})`;
+  let metaData = `${authorTag} (${isoDate}})`;
   let content = event.content;
-  let message = content.replace(/<@\d+>/, injectData);
-  console.log(`User: ${message}`);
+  let message = content.replace(/<@\d+>/,'');
+  message = `${metaData}: ${message}`;
+  console.log(`--- User: ${message}`);
   try {
     keepTyping = true;
     sendTyping(event.channel);
@@ -401,12 +425,13 @@ client.on('messageCreate', async event => {
   }
   catch (error) { await handleError(event, error); }
   finally { keepTyping = false; }
+  console.log(`event create message completed`);
 });
 
 //startup
 client.once(Events.ClientReady, botUser => {
   updateBotStatus(`online`, 2, `you for input`);
-  console.log(`Bot is online.`);
+  console.log(`Bot is ready.`);
 });
 
 //login

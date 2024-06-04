@@ -1,13 +1,13 @@
-// get_espn_sports.js
+// get_espn.js
 
 const fetch = require('node-fetch');
 
 // openai
 const { get_gptresponse } = require('./get_gptresponse');
 
-const get_espn_sports = async ({ sport, league, infoType, team, location, playerName, season }) => {
+const get_espn = async ({ sport, league, infoType, team, location, playerName, season }) => {
   try {
-    console.log(`get_espn_sports function was called`);
+    console.log(`get_espn function was called`);
     console.log(`variables in place: sport(${sport}), league(${league}), infoType(${infoType}), team(${team}), location(${location}), playerName(${playerName}), season(${season})`);
 
     if(!location && sport && league && infoType == 'team') {
@@ -84,23 +84,23 @@ const get_espn_sports = async ({ sport, league, infoType, team, location, player
     return data;
   }
   catch (error) {
-    console.error("Error fetching ESPN sports data: ", error.message);
+    console.error("Error in get_espn:", error);
     return { error: error.message };
   }
 }
 
-module.exports = { get_espn_sports };
+module.exports = { get_espn };
 
 /*
 {
-  "name": "get_espn_sports",
-  "description": "This function connects to the ESPN API for access to a plethora of information about American sports.",
+  "name": "get_espn",
+  "description": "Retrieves sports data from the ESPN API. Useful when asked about sports news, scores, team, or player information.",
   "parameters": {
     "type": "object",
     "properties": {
       "sport": {
         "type": "string",
-        "description": "The sport being requested.",
+        "description": "The sport.",
         "enum": [
           "football",
           "baseball",
@@ -110,7 +110,7 @@ module.exports = { get_espn_sports };
       },
       "league": {
         "type": "string",
-        "description": "The league being requested.",
+        "description": "The league of the sport.",
         "enum": [
           "nfl",
           "mlb",
@@ -125,31 +125,30 @@ module.exports = { get_espn_sports };
       },
       "infoType": {
         "type": "string",
-        "description": "Type of information requested.",
+        "description": "The category of information: 'news' retrieves articles about the league. 'scores' retrieves scoreboards for games played in the last 7 days; 'team' retrieves a team's complete profile, including the most recent game data. 'playerBio' retrieves a player's complete personal profile. 'playerStats' retrieves a player's complete statistical profile.",
         "enum": [
           "news",
           "scores",
           "team",
-          "allteams",
           "playerBio",
           "playerStats"
         ]
       },
       "team": {
         "type": "string",
-        "description": "If applicable, the name of the team in question."
+        "description": "The name of the team, when applicable."
       },
       "location": {
         "type": "string",
-        "description": "If applicable, the location of the team in question. Professional sports inquiries requires the name of the city and college sports inquries requires the name of the state."
+        "description": "The location of the team, when applicable. Pro sports requires the city name (e.g. Denver). College sports requires the state name (e.g. Colorado)."
       },
       "playerName": {
         "type": "string",
-        "description": "If applicable, the first and last name of the player in question."
+        "description": "The full name of the player, when applicable."
       },
       "season": {
-        "type": "string",
-        "description": "If applicable, the year of the league season in question. Default to current year."
+        "type": "number",
+        "description": "The year of the league season. Default: current year."
       }
     },
     "required": [
@@ -162,20 +161,3 @@ module.exports = { get_espn_sports };
   }
 }
 */
-
-/**
- * This function is a wrapper for the ESPN API, which provides various sports-related information. 
- * It takes in parameters such as the sport, league, infoType, location, and season of interest, 
- * and returns the corresponding information from the ESPN database. 
- * 
- * Parameters:
- * - sport: The sport being requested. (string)
- * - league: The league being requested. (string)
- * - infoType: The type of information requested. (string)
- * - location: The location of the team in question. Professional sports inquiries require the name of the city, 
- *   while college sports inquiries require the name of the state. (string)
- * - season: The year of the league season in question. Default to current year. (string)
- * 
- * Returns:
- * - The requested information from the ESPN database.
- */

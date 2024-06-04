@@ -29,7 +29,12 @@ const get_astronomy_search = async (query, searchType, limit) => {
     if (searchType === 'constellation') { return response.data.data[0].position.constellation.id; }
     else { return false; }
   }
-  catch (error) { return { error: error.message }; }
+  catch (error) {
+    console.error("Error in get_astronomy_search:", error);
+    return { error: error.message };
+  }
 }
 
 module.exports = { get_astronomy_search };
+
+// not a function call

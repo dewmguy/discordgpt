@@ -11,7 +11,10 @@ const get_summary = async ({ url }) => {
     const summary = await get_article({ url, directive });
     return summary;
   }
-  catch (error) { return { error: error.message }; }
+  catch (error) {
+    console.error("Error in get_summary:", error);
+    return { error: error.message };
+  }
 }
 
 module.exports = { get_summary };
@@ -19,18 +22,18 @@ module.exports = { get_summary };
 /*
 {
   "name": "get_summary",
+  "description": "Retrieves a summarized scrape of data from a given URL. Useful if asked to look at the contents of a provided url.",
   "parameters": {
     "type": "object",
     "properties": {
       "url": {
         "type": "string",
-        "description": "The url"
+        "description": "The URL"
       }
     },
     "required": [
       "url"
     ]
-  },
-  "description": "This function will attempt to scrape the URL provided to extract information that the user may otherwise not want to look at themselves."
+  }
 }
 */

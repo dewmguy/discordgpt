@@ -31,8 +31,8 @@ const get_time = async ({ area, location, region }) => {
     }
   }
   catch (error) {
-    console.error(error);
-    return error;
+    console.error("Error in get_time:", error);
+    return { error: error.message };
   }
 };
 
@@ -41,25 +41,25 @@ module.exports = { get_time };
 /*
 {
   "name": "get_time",
+  "description": "Retrieve current time data from the World Time API. Useful when asked about the time in any location.",
   "parameters": {
     "type": "object",
     "properties": {
       "area": {
         "type": "string",
-        "description": "The time zone category, referred to by the continent (i.e. America) or a generic time area (i.e. MST).",
-        "enum": ["Africa","America","Antarctica","Asia","Atlantic","Australia","Europe","Indian","Pacific","CET","EET","EST","ETC","HST","MET","MST","WET"]
+        "description": "The timezone area; continent or a generic area name.",
+        "enum": ["Africa", "America", "Antarctica", "Asia", "Atlantic", "Australia", "Europe", "Indian", "Pacific", "CET", "EET", "EST", "ETC", "HST", "MET", "MST", "WET"]
       },
       "location": {
         "type": "string",
-        "description": "The time zone location, referred to by the city name (i.e. Denver) or in specific instances the name of the state (e.g. Argentina, Indiana, Kentucky, and North_Dakota)."
+        "description": "The time zone location. The city name, except for the following specific locations: Argentina, Indiana, Kentucky, and North_Dakota."
       },
       "region": {
         "type": "string",
-        "description": "A tertiary option required only when the location contains a state."
+        "description": "The time zone region. The city name for the exceptions in the location parameter."
       }
     },
-    "required": ["area"]
-  },
-  "description": "This function connects to the World Time API to determine the time in any location provided the area, location, and sometimes the region. For example: In the timezone 'America/Denver', America is the area and Denver is the location. Other examples would include a region, such as America/Argentina/Salta."
+    "required": ["area", "location"]
+  }
 }
 */

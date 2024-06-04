@@ -15,6 +15,7 @@ const get_search = async ({ query, searchType }) => {
         break;
       case 'sports':
       case 'web':
+      case 'local_news':
       default:
         serpApiUrl = `https://serpapi.com/search?q=${encodeURIComponent(query)}&api_key=${SERPAPI_APIKEY}`;
         break;
@@ -22,17 +23,17 @@ const get_search = async ({ query, searchType }) => {
 
     const response = await fetch(serpApiUrl);
     const data = await response.json();
-    let results;
+    let results = data.organic_results;
 
     if (searchType === 'news') { results = data.news_results; }
-    else if (searchType === 'sports') { results = data.sports_results ? data.sports_results : data.organic_results; }
-    else { results = data.organic_results; }
+    else if (searchType === 'local_news') { results = data.local_news; }
+    else if (searchType === 'sports') { results = data.sports_results || results; }
     
     console.log(`returning search results`);
     return results;
   }
   catch (error) {
-    console.log("Error:", error.message);
+    console.error("Error in get_search:", error);
     return { error: error.message };
   }
 }

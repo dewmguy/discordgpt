@@ -26,7 +26,7 @@ const get_article = async ({ url, directive }) => {
     return summary;
   }
   catch (error) {
-    console.log("Error:", error.message);
+    console.error("Error in get_article:", error);
     return { error: error.message };
   }
 }
@@ -34,14 +34,3 @@ const get_article = async ({ url, directive }) => {
 module.exports = { get_article };
 
 // not a function call
-
-/**
- * This function is an async function that takes an object with a `url` property.
- * It uses the RapidAPI service to extract the article from the provided URL and then
- * uses get_gptresponse to summarize the article.
- * 
- * @async
- * @param {object} options - An object with a `url` property.
- * @param {string} options.url - The URL of the article to be extracted and summarized.
- * @returns {Promise<string|object>} - A Promise that resolves to the summarized article as a string or an error object.
- */

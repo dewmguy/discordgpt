@@ -83,8 +83,8 @@ const get_themoviedb = async ({ mediaType, infoType, query, year, season, episod
     return await fetchData(url, options);
   }
   catch (error) {
-    console.error('Error:', error);
-    throw new Error(`Debug: ${error}`);
+    console.error("Error in get_themoviedb:", error);
+    return { error: error.message };
   }
 }
 
@@ -93,35 +93,49 @@ module.exports = { get_themoviedb };
 /*
 {
   "name": "get_themoviedb",
-  "description": "This function connects to The Movie Database API to fetch information about movies, TV shows (Series, Seasons, and Episodes), and people (actors, directors, etc.).",
+  "description": "Retrieve information about TV Shows, Movies, and People from The Movie Database API. Useful when asked about movies, tv shows (series, seasons, or episodes), or people (actors, directors, etc).",
   "parameters": {
     "type": "object",
     "properties": {
       "mediaType": {
         "type": "string",
-        "description": "The type of inquiry in question, whether it's about a movie, tv show, or person (actor, director, etc.).",
-        "enum": ["movie","tv","person"]
+        "description": "The category.",
+        "enum": [
+          "movie",
+          "tv",
+          "person"
+        ]
       },
       "infoType": {
         "type": "string",
-        "description": "The type of information about the media in question. Search will pull up several results based on the query. Popular and Trending are similar, trending is relevant to the current week whereas popular is relevant to all time. nowPlaying will show what's in theaters. upcoming is for movies soon to be released in theaters. tvDetails, seasonDetails, and episodeDetails will all provide a different specificity of information regarding a tv show.",
-        "enum": ["search","nowPlaying","popular","topRated","upcoming","trending","tvDetails","seasonDetails","episodeDetails"]
+        "description": "The information to request. 'search' retrieves results based on the query parameter. 'popular' retrieves a list of results of all time. 'trending' retrieves a list of results of the current week. 'nowPlaying' retrieves a list of movies in theaters. 'upcoming' retrieves a list of movies soon to be in theaters. 'tvDetails', 'seasonDetails', and 'episodeDetails' retrieves tv show data respective to the scope of specificity.",
+        "enum": [
+          "search",
+          "nowPlaying",
+          "popular",
+          "topRated",
+          "upcoming",
+          "trending",
+          "tvDetails",
+          "seasonDetails",
+          "episodeDetails"
+        ]
       },
       "query": {
         "type": "string",
-        "description": "Required for infoType 'search'. The search query related to the mediaType in question. For example, the name of the actor, movie, or show."
+        "description": "The name of the person, movie, or show. Required for 'search' infoType parameter."
       },
       "year": {
         "type": "number",
-        "description": "The year of release of the media in question. Query the user for specificity or make your best educated guess."
+        "description": "The release year of the media. Query the user or make your best educated guess."
       },
       "season": {
         "type": "number",
-        "description": "If applicable, the season number for TV shows. Required for seasonDetails and episodeDetails."
+        "description": "The season number, when applicable. Required for 'seasonDetails' and 'episodeDetails' infoType parameter."
       },
       "episode": {
         "type": "number",
-        "description": "If applicable, the episode number for TV shows. Required for episodeDetails."
+        "description": "The episode number, when applicable. Required for 'episodeDetails' infoType parameter."
       }
     },
     "required": [
@@ -132,16 +146,3 @@ module.exports = { get_themoviedb };
   }
 }
 */
-
-/**
- * This function is an async function that connects to The Movie Database API to fetch information about movies, TV shows, and people.
- *
- * @param {Object} params - The parameters for the function.
- * @param {string} params.mediaType - The type of inquiry (movie, tv, person).
- * @param {string} params.infoType - The type of information about the media in question.
- * @param {string} params.query - The search query related to the mediaType in question.
- * @param {number} params.year - The year of release of the media in question.
- * @param {number} [params.season] - The season number for TV shows.
- * @param {number} [params.episode] - The episode number for TV shows.
- * @return {Promise<Object>} A promise that resolves to the JSON response from the API.
- */

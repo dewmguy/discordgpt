@@ -17,20 +17,12 @@ const get_gptresponse = async (directive, data) => {
 		console.log(`the response was: ${response}`);
 		return response;
 	}
-	catch (error) { return { error: error.message }; }
+  catch (error) {
+    console.error("Error in get_gptresponse:", error);
+    return { error: error.message };
+  }
 }
 
 module.exports = { get_gptresponse };
 
 // not a function call
-
-/**
- * This function is an async function that takes two parameters: directive and data.
- * It uses the OpenAI API to create a chatbot with the given directive and data.
- * The function returns the response from the chatbot.
- * 
- * @async
- * @param {string} directive - The system message that the chatbot will use as a guide.
- * @param {string} data - The user message that the chatbot will use as input.
- * @returns {Promise<string|object>} - A Promise that resolves to the response from the chatbot as a string or an error object.
- */

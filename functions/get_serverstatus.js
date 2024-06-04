@@ -47,7 +47,7 @@ const get_serverstatus = async ({ address, port, steam }) => {
     });
   }
   catch (error) {
-    console.log('Error occurred:', error.message);
+    console.error("Error in get_serverstatus:", error);
     return { status: "down", address, port, error: error.message };
   }
 };
@@ -57,23 +57,23 @@ module.exports = { get_serverstatus };
 /*
 {
   "name": "get_serverstatus",
-  "description": "This function checks if a given web, game, or steam protocol game service at a given address and port is responding, including locally. Local servers include AzerothCore Warcraft (localhost:8085), Insurgency: Sandstorm (localhost:27131,Steam), Plex Media Server (192.168.1.11:32400), Valheim (localhost:2457,Steam), and Minecraft (localhost:25565).",
+  "description": "Retrieves service status information for a provided server address and port. Useful for checking the current status of a website or web service, including local servers. Examples include Plex Media Server (192.168.1.11:32400), Warcraft AzerothCore Private Server (localhost:8085), Minecraft (localhost:25565), Insurgency: Sandstorm (localhost:27131,Steam), and Valheim (localhost:2457,Steam).",
   "parameters": {
     "type": "object",
     "properties": {
       "address": {
         "type": "string",
-        "description": "The server address to check.",
+        "description": "The server address.",
         "default": "127.0.0.1"
       },
       "port": {
         "type": "number",
-        "description": "The port to check on the server.",
-        "default": "80"
+        "description": "The server port.",
+        "default": 80
       },
       "steam": {
         "type": "string",
-        "description": "If 'true' this will specify to the function that it should use a special steam protocol to verify the status of the given game server:port. Certain steam game servers, such as Insurgency, require the steam protocol. If 'false' this will use the standard connection method.",
+        "description": "Whether to use a special Steam protocol to verify the status of certain game servers. Required. Ask if unknown.",
         "default": "false",
         "enum": [
           "true",

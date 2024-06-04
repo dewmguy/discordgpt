@@ -35,26 +35,32 @@ const get_solarlunar = async ({ location, body }) => {
       return moonResult;
     }
   }
-  catch (error) { return { error: error.message }; }
+  catch (error) {
+    console.error("Error in get_solarlunar:", error);
+    return { error: error.message };
+  }
 }
 
 module.exports = { get_solarlunar };
 
 /*
 {
-  "name": "get_moon",
-  "description": "This function connects to the Moon API to retrieve current information about the moon based on my location.",
+  "name": "get_solarlunar",
+  "description": "Retrieves current lunar or solar data from Moon API. Useful when asked about any solar or lunar activity.",
   "parameters": {
     "type": "object",
     "properties": {
       "location": {
         "type": "string",
-        "description": "The city name of the user's location"
+        "description": "The name of the city. Required. Ask for the location."
       },
       "body": {
         "type": "string",
-        "description": "Either the sun or the moon.",
-        "enum": ["sun","moon"]
+        "description": "The celestial body.",
+        "enum": [
+          "sun",
+          "moon"
+        ]
       }
     },
     "required": [

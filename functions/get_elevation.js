@@ -13,7 +13,10 @@ const get_elevation = async ({ latitude, longitude }) => {
     console.log(`elevation at ${latitude}, ${longitude} is ${elevation} meters`);
     return elevation;
   }
-  catch (error) { return { error: error.message }; }
+  catch (error) {
+    console.error("Error in get_elevation:", error);
+    return { error: error.message };
+  }
 }
 
 module.exports = { get_elevation };

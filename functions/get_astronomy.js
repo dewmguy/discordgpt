@@ -69,7 +69,10 @@ const get_astronomy = async ({ dataType, bodyName, location, time, date, old_dat
     }
     else { return response.data; }
   }
-  catch (error) { return { error: error.message }; }
+  catch (error) {
+    console.error("Error in get_astronomy:", error);
+    return { error: error.message };
+  }
 }
 
 module.exports = { get_astronomy };
@@ -77,13 +80,13 @@ module.exports = { get_astronomy };
 /*
 {
   "name": "get_astronomy",
-  "description": "This function connects to the Astronomy API to retrieve information about planets, stars and galaxies, and star-charts of stars and constellations.",
+  "description": "Retrieves celestial object data from the Astronomy API. Useful when asked about the locations of planets, stars, galaxies, or constellations. Can generate star maps.",
   "parameters": {
     "type": "object",
     "properties": {
       "dataType": {
         "type": "string",
-        "description": "The type of astronomy data to query. 'bodies' retrieves locations of planets in the solar system. 'studio' retrieves star-chart images displaying the location of certain celestial objects. 'search' will only retrieve data about a particular star or galaxy. Do not search for planets.",
+        "description": "The category of the query. 'bodies' retrieves data about planets in our solar system. 'studio' retrieves star-chart images displaying the locations of celestial objects like constellations and stars. 'search' retrieves data about stars or galaxies; not planets.",
         "enum": [
           "bodies",
           "studio",
@@ -92,23 +95,23 @@ module.exports = { get_astronomy };
       },
       "bodyName": {
         "type": "string",
-        "description": "The name of the celestial body being queried. Positions queries can be given for planets in the solar system. Star charts require the star or constellation name e.g. 'orion'. Searches require name of the star or galaxy."
+        "description": "The name of the celestial body. Planets, star, galaxies, or constellations."
       },
       "location": {
         "type": "string",
-        "description": "The name of the city the observer is in. You must ask the user for their location if it was not given."
+        "description": "The name of the city. Required. Ask for the location."
       },
       "time": {
         "type": "string",
-        "description": "The current local time for the user. Format: HH:MM:SS"
+        "description": "The current local time at the location. Format: HH:MM:SS"
       },
       "date": {
         "type": "string",
-        "description": "The current date for the user. Sometimes used as the newest of a specified date range query. Format: YYYY-MM-DD"
+        "description": "The current date at the location. Also used as the newest date in a range. Format: YYYY-MM-DD"
       },
       "old_date": {
         "type": "string",
-        "description": "The current date for the user. Sometimes used as the oldest of a specified date range query. Format: YYYY-MM-DD"
+        "description": "The current date at the location. Also used as the oldest date in a range. Format: YYYY-MM-DD"
       }
     },
     "required": [

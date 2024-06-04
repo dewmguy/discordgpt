@@ -20,7 +20,7 @@ const get_weather = async ({ location, report }) => {
     return weatherData;
   }
   catch (error) {
-    console.log(error.message);
+    console.error("Error in get_weather:", error);
     return { error: error.message };
   }
 };
@@ -30,18 +30,21 @@ module.exports = { get_weather };
 /*
 {
   "name": "get_weather",
-  "description": "This function connects to the OpenWeatherMap API to retrieve weather information about a given location. Completely rewrite the output to sound like a meteorologist's weather report based on the request. Round all numerical points of data to the nearest whole digit.",
+  "description": "Retrieve weather reports from OpenWeather API. Useful when asked about current or forecast weather information. Write output in the style of a weather report from a meteorologist. Round all numerical points of data to the nearest whole digit.",
   "parameters": {
     "type": "object",
     "properties": {
       "location": {
         "type": "string",
-        "description": "The city and state in question."
+        "description": "The city and state."
       },
       "report": {
         "type": "string",
-        "description": "The type of weather information being requested.",
-        "enum": ["current","forecast"]
+        "description": "The type of weather report.",
+        "enum": [
+          "current",
+          "forecast"
+        ]
       }
     },
     "required": [
@@ -51,14 +54,3 @@ module.exports = { get_weather };
   }
 }
 */
-
-/**
- * This function is an async function that takes an object with a `location` and `report` property.
- * It uses the OpenWeatherMap API to get weather information about a given location.
- * 
- * @async
- * @param {object} options - An object with a `location` and `report` property.
- * @param {string} options.location - The name of the city and state in question.
- * @param {string} options.report - The type of weather information being requested. It can be "current" or "forecast".
- * @returns {Promise<object|object>} - A Promise that resolves to an object with weather information if the location is valid, or an object with an `error` property if the location is invalid.
- */

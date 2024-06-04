@@ -1,4 +1,4 @@
-// get_dalle_image.js
+// get_dalle.js
 
 require('dotenv').config();
 
@@ -15,9 +15,11 @@ const imagekit = new ImageKit({
     urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
 });
 
-async function generateImage(prompt) {
+async function generateImage(prompt, orientation) {
   try {
-    const image = await openai.images.generate({ prompt: prompt, model: "dall-e-3", quality: `hd`, size: `1792x1024` });
+    let resolution = '1792x1024'
+    if(orientation === 'portrait') { resolution = '1024x1792'; }
+    const image = await openai.images.generate({ prompt: prompt, model: "dall-e-3", quality: `hd`, size: resolution });
     return image.data[0];
   }
   catch (error) {
@@ -41,12 +43,12 @@ async function uploadToImageKit(url) {
   }
 }
 
-const get_dalle_image = async ({ prompt }) => {
+const get_dalle = async ({ prompt, orientation }) => {
   console.log("get_dalle_image function was called");
   console.log(`generating an image: ${prompt}`);
   try {
     const startTime = Date.now();
-    const image = await generateImage(prompt);
+    const image = await generateImage(prompt, orientation);
     const imageKitUrl = await uploadToImageKit(image.url);
     const endTime = (Date.now() - startTime) / 1000;
     const duration = `Generated Image (${endTime} seconds):`;
@@ -63,36 +65,34 @@ const get_dalle_image = async ({ prompt }) => {
     };
   }
   catch (error) {
-    console.error("Error in get_dalle_image:", error);
+    console.error("Error in get_dalle:", error);
     return { error: error.message };
   }
 };
 
-module.exports = { get_dalle_image };
+module.exports = { get_dalle };
 
 /*
 {
-  "name": "get_dalle_image",
-  "description": "This function will connect you to Dalle 3 API for image generation. Feel free to format, but do not exclude or alter the data provided by the function.",
+  "name": "get_dalle",
+  "description": "Retrieves generated images from the most current Dall-e API. Useful when asked to generate an image. Do not exclude or alter the output.",
   "parameters": {
     "type": "object",
     "properties": {
       "prompt": {
         "type": "string",
-        "description": "The description of the image to be created by Dall-e 3"
+        "description": "The image description."
+      },
+      "orientation": {
+        "type": "string",
+        "description": "The image orientation.",
+        "enum": ["landscape", "portrait"]
       }
     },
     "required": [
-      "prompt"
+      "prompt",
+      "orientation"
     ]
   }
 }
 */
-
-/**
- * This function will connect you to Dalle 3 API for image generation. It takes a prompt as a string, which is the description of the image to be created by Dall-e 3. The function will then return an object with the following properties:
- * - `duration`: a string describing the duration of the image generation process.
- * - `revisedPrompt`: a string describing the optimized prompt used by Dall-e 3.
- * - `imageUrl`: a string representing the URL of the generated image.
- * If there is an error during the image generation process, the function will return an object with an `error` property containing the error message.
- */

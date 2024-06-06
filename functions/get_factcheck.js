@@ -3,7 +3,7 @@
 const fetch = require('node-fetch');
 const RAPIDAPI_APIKEY = process.env.RAPIDAPI_APIKEY;
 
-const get_factcheck = async ({ domain, record }) => {
+const get_factcheck = async ({ query }) => {
   console.log("get_factcheck function was called");
   try {
     const url = `https://fact-checker.p.rapidapi.com/search?query=${encodeURIComponent(query)}&limit=5`;
@@ -16,7 +16,7 @@ const get_factcheck = async ({ domain, record }) => {
     };
     const response = await fetch(url, options);
     const result = await response.text();
-    if(!result) { return `There are no results to confirm nor deny the statement that ${query}`; }
+    if(!result) { return `There are no results to confirm nor deny the statement: ${query}`; }
     console.log(result);
     return result;
   }

@@ -1,7 +1,7 @@
 // get_weather_today.js
 
 const fetch = require('node-fetch');
-const { get_coordinate } = require('../get_coordinate');
+const { function_coords } = require('../function_coords');
 const OPENWEATHER_APIKEY = process.env.OPENWEATHER_APIKEY;
 
 const get_weather_today = async ({ location }) => {
@@ -9,7 +9,7 @@ const get_weather_today = async ({ location }) => {
   try {
     console.log(`getting coordinates for ${location}`);
 
-    let coordinates = await get_coordinate({ location });
+    let coordinates = await function_coords({ location });
     if (coordinates.error) throw new Error(coordinates.error);
     let { latitude, longitude } = coordinates;
 

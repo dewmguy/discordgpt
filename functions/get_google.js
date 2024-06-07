@@ -1,14 +1,14 @@
 // get_google.js
 
-const { get_search } = require('./get_search');
-const { get_article } = require('./get_article');
-const { get_gptresponse } = require('./get_gptresponse');
+const { function_search } = require('./function_search');
+const { function_article } = require('./function_article');
+const { function_gpt } = require('./function_gpt');
 
 const get_google = async ({ query, searchType }) => {
   try {
     console.log("get_google function was called");
 
-    const results = await get_search({ query, searchType });
+    const results = await function_search({ query, searchType });
 
     if (searchType == 'sports') { return results; }
     else {
@@ -27,13 +27,13 @@ const get_google = async ({ query, searchType }) => {
         if (url) {
           const directive = `Your objective is to determine whether a web page appears to be relevant to a query. If it is, say "true". If it is not, say "false". Your output will not be read by a human, simply return the boolean output: true or false. Thanks.`;
           const prompt = `Is the page title "${title}" relevant to the search query "${query}"? True or false.`;
-          let isRelevant = await get_gptresponse(directive, prompt);
+          let isRelevant = await function_gpt(directive, prompt);
           isRelevant = isRelevant.trim().toLowerCase();
           console.log(`is article relevant: ${isRelevant}`);
           if (isRelevant === 'true') {
             console.log(`scraping article`);
             const directive = 'You are a professional copy editor, strip and summarize the contents of the data provided leaving the most important and relevant content. This content will not be read by a human, the output will return to an assitant api for further analysis.';
-            const articleSummary = await get_article({ url, directive });
+            const articleSummary = await function_article({ url, directive });
             if (!articleSummary.error) {
               summarized_results.push({
                 articleTitle: title,

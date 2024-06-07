@@ -1,7 +1,6 @@
 // get_propertysearch.js
 
 const fetch = require('node-fetch');
-const RAPIDAPI_APIKEY = process.env.RAPIDAPI_APIKEY;
 
 const get_propertysearch = async ({ location, status_type, home_type, sort, minPrice, maxPrice, bathsMin, bathsMax, bedsMin, bedsMax, sqftMin, sqftMax, buildYearMin, buildYearMax, isBasementUnfinished, isNewConstruction, lotSizeMin, lotSizeMax, hasAirConditioning, hasGarage }) => {
   console.log("get_propertysearch function was called");
@@ -38,7 +37,7 @@ const get_propertysearch = async ({ location, status_type, home_type, sort, minP
     const options = {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': RAPIDAPI_APIKEY,
+        'X-RapidAPI-Key': `${process.env.RAPIDAPI_APIKEY}`,
         'X-RapidAPI-Host': 'zillow-com1.p.rapidapi.com'
       }
     };

@@ -1,6 +1,6 @@
 // get_summary.js
 
-const { get_article } = require('./get_article');
+const { function_article } = require('./function_article');
 
 const get_summary = async ({ url }) => {
   console.log("get_summary function was called");
@@ -8,7 +8,7 @@ const get_summary = async ({ url }) => {
 
   try {
     const directive = 'You are a professional copy editor, please strip and summarize the contents of the article.';
-    const summary = await get_article({ url, directive });
+    const summary = await function_article({ url, directive });
     return summary;
   }
   catch (error) {

@@ -1,19 +1,14 @@
 // get_dalle.js
 
-require('dotenv').config();
-
-const { OpenAI } = require('openai');
-const openai = new OpenAI({ apiKey: process.env.OPENAI_APIKEY });
-
 const axios = require('axios');
-
 const ImageKit = require("imagekit");
-
 const imagekit = new ImageKit({
     publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
     privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
     urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
 });
+const { OpenAI } = require('openai');
+const openai = new OpenAI({ apiKey: process.env.OPENAI_APIKEY });
 
 async function generateImage(prompt, orientation) {
   try {

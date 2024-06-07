@@ -1,7 +1,6 @@
 // get_factcheck.js
 
 const fetch = require('node-fetch');
-const RAPIDAPI_APIKEY = process.env.RAPIDAPI_APIKEY;
 
 const get_factcheck = async ({ query }) => {
   console.log("get_factcheck function was called");
@@ -10,7 +9,7 @@ const get_factcheck = async ({ query }) => {
     const options = {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': RAPIDAPI_APIKEY,
+        'X-RapidAPI-Key': `${process.env.RAPIDAPI_APIKEY}`,
         'X-RapidAPI-Host': 'fact-checker.p.rapidapi.com'
       }
     };

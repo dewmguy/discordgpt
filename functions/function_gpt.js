@@ -1,11 +1,11 @@
-// get_gptresponse.js
+// function_gpt.js
 
 const { OpenAI } = require('openai');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_APIKEY });
 
-const get_gptresponse = async (directive, data) => {
+const function_gpt = async (directive, data) => {
 	try {
-		console.log(`get_gptresponse function was called`);
+		console.log(`function_gpt function was called`);
 		const completion = await openai.chat.completions.create({
 			messages: [
 				{ "role": "system", "content": directive },
@@ -18,11 +18,9 @@ const get_gptresponse = async (directive, data) => {
 		return response;
 	}
   catch (error) {
-    console.error("Error in get_gptresponse:", error);
+    console.error("Error in function_gpt:", error);
     return { error: error.message };
   }
 }
 
-module.exports = { get_gptresponse };
-
-// not a function call
+module.exports = { function_gpt };

@@ -9,7 +9,6 @@ const get_flight = async ({ flightICAO }) => {
     const response = await fetch(url);
     const data = await response.json();
     const result = data.data[0];
-    console.log(`result: ${JSON.stringify(result)}`);
     if (!result) { throw new Error('No data returned for the given flight ICAO'); }
     return result;
   }

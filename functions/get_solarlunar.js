@@ -1,13 +1,12 @@
 // get_solarlunar.js
 
 const fetch = require('node-fetch');
-const { get_coordinate } = require('./get_coordinate.js');
-const RAPIDAPI_APIKEY = process.env.RAPIDAPI_APIKEY;
+const { function_coords } = require('./function_coords');
 
 const get_solarlunar = async ({ location, body }) => {
   console.log("get_solarlunar function was called");
   
-  let coordinates = await get_coordinate({ location });
+  let coordinates = await function_coords({ location });
   if (coordinates.error) throw new Error(coordinates.error);
   let { latitude, longitude } = coordinates;
   
@@ -16,21 +15,20 @@ const get_solarlunar = async ({ location, body }) => {
     const options = {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': RAPIDAPI_APIKEY,
+        'X-RapidAPI-Key': `${process.env.RAPIDAPI_APIKEY}`,
         'X-RapidAPI-Host': 'moon-phase.p.rapidapi.com'
       }
     };
     const response = await fetch(url, options);
     const result = await response.json();
-    let moon, sun;
 
-    if(body === 'sun') {
-      sunResult = result.sun;
+    if (body === 'sun') {
+      const sunResult = result.sun;
       console.log(sunResult);
       return sunResult;
     }
-    if(body === 'moon') {
-      moonResult = { moon_data: result.moon, moon_phases: result.moon_phases };
+    else if (body === 'moon') {
+      const moonResult = { moon_data: result.moon, moon_phases: result.moon_phases };
       console.log(moonResult);
       return moonResult;
     }

@@ -16,5 +16,3 @@ const function_fetch = async (url, options) => {
 }
 
 module.exports = { function_fetch };
-
-// not a function call

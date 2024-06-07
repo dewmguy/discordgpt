@@ -1,13 +1,12 @@
-// get_article.js
+// function_article.js
 
-const { get_gptresponse } = require('./get_gptresponse');
 const fetch = require('node-fetch');
+const { function_gpt } = require('./function_gpt');
 const TurndownService = require('turndown');
 const turndownService = new TurndownService();
-const RAPIDAPI_APIKEY = process.env.RAPIDAPI_APIKEY;
 
-const get_article = async ({ url, directive }) => {
-  console.log("get_article function was called");
+const function_article = async ({ url, directive }) => {
+  console.log("function_article function was called");
   console.log(`pulling data from article ${url}`);
   try {
     
@@ -15,22 +14,20 @@ const get_article = async ({ url, directive }) => {
     const options = {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': RAPIDAPI_APIKEY,
+        'X-RapidAPI-Key': `${process.env.RAPIDAPI_APIKEY}`,
         'X-RapidAPI-Host': 'article-extractor2.p.rapidapi.com'
       }
     };
     const response = await fetch(link, options);
     const data = await response.text();
     markdown = await turndownService.turndown(data);
-    const summary = await get_gptresponse(directive,markdown);
+    const summary = await function_gpt(directive,markdown);
     return summary;
   }
   catch (error) {
-    console.error("Error in get_article:", error);
+    console.error("Error in function_article:", error);
     return { error: error.message };
   }
 }
 
-module.exports = { get_article };
-
-// not a function call
+module.exports = { function_article };

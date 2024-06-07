@@ -1,9 +1,7 @@
-// get_elevation.js
+// function_elevation.js
 
-const { get_coordinate } = require('./get_coordinate');
-
-const get_elevation = async ({ latitude, longitude }) => {
-  console.log("get_elevation function was called");
+const function_elevation = async ({ latitude, longitude }) => {
+  console.log("function_elevation function was called");
 
   try {
     const elevationURL = `https://api.open-elevation.com/api/v1/lookup?locations=${latitude},${longitude}`;
@@ -14,11 +12,9 @@ const get_elevation = async ({ latitude, longitude }) => {
     return elevation;
   }
   catch (error) {
-    console.error("Error in get_elevation:", error);
+    console.error("Error in function_elevation:", error);
     return { error: error.message };
   }
 }
 
-module.exports = { get_elevation };
-
-// not a function call
+module.exports = { function_elevation };

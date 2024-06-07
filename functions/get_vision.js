@@ -1,8 +1,5 @@
 // get_vision.js
 
-require('dotenv').config();
-
-//openai
 const { OpenAI } = require('openai');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_APIKEY });
 

@@ -1,11 +1,11 @@
-// get_search.js
+// function_search.js
 
 const fetch = require('node-fetch');
 const SERPAPI_APIKEY = process.env.SERPAPI_APIKEY;
 
-const get_search = async ({ query, searchType }) => {
+const function_search = async ({ query, searchType }) => {
   try {
-    console.log("get_search function was called");
+    console.log("function_search function was called");
     console.log(`query: "${query}" searchType: "${searchType}"`);
 
     let serpApiUrl;
@@ -33,11 +33,9 @@ const get_search = async ({ query, searchType }) => {
     return results;
   }
   catch (error) {
-    console.error("Error in get_search:", error);
+    console.error("Error in function_search:", error);
     return { error: error.message };
   }
 }
 
-module.exports = { get_search };
-
-// not a function call
+module.exports = { function_search };

@@ -1,35 +1,32 @@
 // get_stockprice.js
 
 const fetch = require('node-fetch');
-const STOCKPRICEAPIKEY = process.env.STOCKMARKETAPI_APIKEY;
 
 const get_stockprice = async ({ ticker }) => {
   console.log("get_stockprice function was called");
   console.log(`Fetching stock price for ${ticker}`);
   
-  const url = `https://api.polygon.io/v2/aggs/ticker/${ticker}/prev?adjusted=true&apiKey=${STOCKPRICEAPIKEY}`;
+  const url = `https://api.polygon.io/v2/aggs/ticker/${ticker}/prev?adjusted=true&apiKey=${process.env.STOCKMARKETAPI_APIKEY}`;
 
   try {
     const response = await fetch(url);
     const result = await response.json();
+    if (!result) { throw new Error(`API Call Issue`); }
     
-    if (result.status === "OK") {
-      const data = result.results[0];
-      const stockData = {
-        ticker: result.ticker,
-        volume: data.v,
-        volumeWeighted: data.vw,
-        open: data.o,
-        close: data.c,
-        high: data.h,
-        low: data.l,
-        timestamp: data.t,
-        transactions: data.n
-      };
-      console.log(stockData);
-      return stockData;
-    }
-    else { throw new Error(`No data found for ticker ${ticker}`); }
+    const data = result.results[0];
+    const stockData = {
+      ticker: result.ticker,
+      volume: data.v,
+      volumeWeighted: data.vw,
+      open: data.o,
+      close: data.c,
+      high: data.h,
+      low: data.l,
+      timestamp: data.t,
+      transactions: data.n
+    };
+
+    return stockData;
   }
   catch (error) {
     console.error("Error in get_stockprice:", error);

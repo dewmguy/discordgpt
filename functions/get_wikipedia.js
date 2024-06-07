@@ -1,7 +1,7 @@
 // get_wikipedia.js
 
-const { get_search } = require('./get_search');
-const { get_article } = require('./get_article');
+const { function_search } = require('./function_search');
+const { function_article } = require('./function_article');
 const fetch = require('node-fetch');
 
 const get_wikipedia = async ({ query }) => {
@@ -11,12 +11,12 @@ const get_wikipedia = async ({ query }) => {
   try {
     query = `wikipedia ${query}`;
     const searchType = 'web';
-    const searchResults = await get_search({ query, searchType });
+    const searchResults = await function_search({ query, searchType });
 
     let url;
     for (let result of searchResults) {
       console.log(result.link);
-      if (result.link.includes('wikipedia.org')) {  // search the results and pull the first wikipedia result
+      if (result.link.includes('wikipedia.org')) {
         url = result.link;
         console.log('article found');
         break;
@@ -25,7 +25,7 @@ const get_wikipedia = async ({ query }) => {
     if (!url) { throw new Error(`No relevant Wikipedia article found for query "${query}"`); }
     
     const directive = `You are a professional copy editor, strip and summarize the contents of the article provided leaving the most important and relevant content related to the query "${query}."`;
-    const scrape = await get_article({ url, directive });
+    const scrape = await function_article({ url, directive });
 
     // Fetch the summary from Wikipedia's API
     const title = url.split('/').pop();

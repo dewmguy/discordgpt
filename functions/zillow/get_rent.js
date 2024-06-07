@@ -1,7 +1,6 @@
 // get_rent.js
 
 const fetch = require('node-fetch');
-const RAPIDAPI_APIKEY = process.env.RAPIDAPI_APIKEY;
 
 const get_rent = async ({ location, diameter = 0.5, property, beds, baths, sqftMin, sqftMax }) => {
   console.log("get_rent function was called");
@@ -33,7 +32,7 @@ const get_rent = async ({ location, diameter = 0.5, property, beds, baths, sqftM
     const options = {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': RAPIDAPI_APIKEY,
+        'X-RapidAPI-Key': `${process.env.RAPIDAPI_APIKEY}`,
         'X-RapidAPI-Host': 'zillow-com1.p.rapidapi.com'
       }
     };

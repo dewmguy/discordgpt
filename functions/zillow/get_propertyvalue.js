@@ -1,7 +1,6 @@
 // get_propertyvalue.js
 
 const fetch = require('node-fetch');
-const RAPIDAPI_APIKEY = process.env.RAPIDAPI_APIKEY;
 
 const get_propertyvalue = async ({ location }) => {
   console.log("get_propertyvalue function was called");
@@ -12,7 +11,7 @@ const get_propertyvalue = async ({ location }) => {
     const options = {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': RAPIDAPI_APIKEY,
+        'X-RapidAPI-Key': `${process.env.RAPIDAPI_APIKEY}`,
         'X-RapidAPI-Host': 'zillow-com1.p.rapidapi.com'
       }
     };

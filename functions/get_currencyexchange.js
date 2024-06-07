@@ -1,7 +1,6 @@
 // get_currencyexchange.js
 
 const fetch = require('node-fetch');
-const RAPIDAPI_APIKEY = process.env.RAPIDAPI_APIKEY;
 
 const get_currencyexchange = async ({ currencyFrom, currencyTo, amount }) => {
   console.log("get_currencyexchange function was called");
@@ -11,7 +10,7 @@ const get_currencyexchange = async ({ currencyFrom, currencyTo, amount }) => {
     const options = {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': RAPIDAPI_APIKEY,
+        'X-RapidAPI-Key': `${process.env.RAPIDAPI_APIKEY}`,
         'X-RapidAPI-Host': 'currency-conversion-and-exchange-rates.p.rapidapi.com'
       }
     };

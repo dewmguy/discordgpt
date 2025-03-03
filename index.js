@@ -325,11 +325,11 @@ async function processMessage(event, channel, message) {
     let theRun = await createRun(event, theThread);
 
     if (theRun && theRun.status === "requires_action") {
-      console.log(`function call initiated`);
+      //console.log(`function call initiated`);
       const getrun = await getRun(event, theThread, theRun.id);
       let functionCallPromises = getrun.required_action.submit_tool_outputs.tool_calls.map(async (functionCall) => {
         console.log(`assistant submitting function call`);
-        console.log(JSON.stringify(functionCall));
+        //console.log(JSON.stringify(functionCall));
         try {
           let callId = functionCall.id;
           let args = JSON.parse(functionCall.function.arguments);

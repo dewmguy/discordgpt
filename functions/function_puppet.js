@@ -4,21 +4,21 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
-const scan_html = async (page, uploader, title, year) => {
+const scan_html = async (page, filter, title, year) => {
   try {
-    //console.log(`[function_puppet] Searching: ${uploader} ${title} ${year}`);
+    console.log(`[function_puppet] Searching: ${filter} ${title} ${year}`);
 
     const builtUrl = process.env.DL_TEMPLATE.replace(/\${(.*?)}/g, (_, key) => {
       return {
         domain: process.env.DL_DOMAIN,
         settings: process.env.DL_SETTINGS,
-        uploader: uploader,
-        title: title,
+        filter: filter,
+        title: title.replace(/[^\w\s]/g,''),
         year: year
       }[key] || '';
     });
 
-    //console.log(`[function_puppet] Loading: ${builtUrl}`);
+    //console.log(`[function_puppet] Searching: ${builtUrl}`);
     await page.goto(builtUrl, { waitUntil: 'networkidle2' });
     
     return await page.evaluate((selector) => {
@@ -78,15 +78,20 @@ const function_puppet = async ({ title, year }) => {
       catch (error) { throw new Error(error); }
     }
 
-    const uploaders = (process.env.DL_UPLOADERS || '').split(',').map(c => c.trim()).filter(Boolean);
+    const filters = (process.env.DL_FILTERS || '').split(',').map(c => c.trim()).filter(Boolean);
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
     let link = null;
-    for (let uploader of uploaders) {
-      link = await scan_html(page, uploader, title, year);
+    for (let filter of filters) {
+      link = await scan_html(page, filter, title, year);
       if (link && !link.error) {
-        //console.log(`[function_puppet] Link: ${link}`);
+        console.log(`[function_puppet] Found: ${link}`);
         break;
       }
+      else { await sleep(5000); }
     }
     if (link.error) { throw new Error(link.error); }
 

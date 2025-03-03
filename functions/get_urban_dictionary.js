@@ -3,7 +3,7 @@
 const fetch = require('node-fetch');
 
 const get_urban_dictionary = async ({ word }) => {
-  console.log("get_urban_dictionary function was called");
+  //console.log("get_urban_dictionary function was called");
   try {
     const url = `https://mashape-community-urban-dictionary.p.rapidapi.com/define?term=${word}`;
     const options = {
@@ -20,7 +20,7 @@ const get_urban_dictionary = async ({ word }) => {
     return definitions;
   }
   catch (error) {
-    console.error("Error in get_urban_dictionary:", error);
+    console.error("[get_urban_dictionary]:", error);
     return { error: error.message };
   }
 }
@@ -30,7 +30,7 @@ module.exports = { get_urban_dictionary };
 /*
 {
   "name": "get_urban_dictionary",
-  "description": "Retrieve accurate defintions of slang and colloquialisms from the Urban Dictionary API. Useful when asked about words or phrases that may not be in the dictionary.",
+  "description": "Retrieves defintions from the Urban Dictionary API. Useful when asked about slang words or colloquialisms that would not be in the dictionary.",
   "parameters": {
     "type": "object",
     "properties": {

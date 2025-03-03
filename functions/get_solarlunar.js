@@ -4,7 +4,7 @@ const fetch = require('node-fetch');
 const { function_coords } = require('./function_coords');
 
 const get_solarlunar = async ({ location, body }) => {
-  console.log("get_solarlunar function was called");
+  //console.log("get_solarlunar function was called");
   
   let coordinates = await function_coords({ location });
   if (coordinates.error) throw new Error(coordinates.error);
@@ -34,7 +34,7 @@ const get_solarlunar = async ({ location, body }) => {
     }
   }
   catch (error) {
-    console.error("Error in get_solarlunar:", error);
+    console.error("[get_solarlunar]:", error);
     return { error: error.message };
   }
 }

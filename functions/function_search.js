@@ -5,8 +5,8 @@ const SERPAPI_APIKEY = process.env.SERPAPI_APIKEY;
 
 const function_search = async ({ query, searchType }) => {
   try {
-    console.log("function_search function was called");
-    console.log(`query: "${query}" searchType: "${searchType}"`);
+    //console.log("function_search function was called");
+    //console.log(`query: "${query}" searchType: "${searchType}"`);
 
     let serpApiUrl;
     switch (searchType) {
@@ -29,11 +29,11 @@ const function_search = async ({ query, searchType }) => {
     else if (searchType === 'local_news') { results = data.local_news; }
     else if (searchType === 'sports') { results = data.sports_results || results; }
     
-    console.log(`returning search results`);
+    //console.log(`returning search results`);
     return results;
   }
   catch (error) {
-    console.error("Error in function_search:", error);
+    console.error("[function_search]:", error);
     return { error: error.message };
   }
 }

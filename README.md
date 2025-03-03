@@ -1,46 +1,22 @@
-# DiscordGPT Description and Usage
+# Node.js Discord Bot
 
-## Description
+## Overview
 
-This app integrates various services including Discord, Airtable, and OpenAI to create an advanced bot that can handle complex interactions within Discord servers. It utilizes the Discord.js library to interact with Discord's API, Airtable for storing and managing data, and OpenAI's API for processing and responding to user messages.
+This Node.js application is a Discord bot that leverages several third-party services to enhance its capabilities. The bot connects to Discord, Airtable, and OpenAI to provide a range of functionalities, including handling user messages, storing data in Airtable, and responding with AI-generated content. It also uses Axios for making HTTP requests.
 
-### OpenAI Assistants API Integration
+## Features
 
-This app is integrated with the OpenAI Assistants API, allowing the Discord bot to utilize advanced AI models for processing and responding to messages with enhanced accuracy and contextual awareness. The use of OpenAI's Assistants API significantly improves the bot's responsiveness and interaction quality, enabling more human-like conversations within Discord.
+- **Discord and OpenAI Integration**: The bot uses the `discord.js` library to interact with Discord servers, allowing it to listen and respond to user messages in real-time. It connects to OpenAI's Assistant using the Assistant API, leveraging the latest ChatGPT models to generate intelligent, context-aware responses. This integration turns the bot into an interactive assistant capable of holding meaningful conversations, answering questions, and providing helpful information directly within the chat, enhancing the user experience significantly.
+- **Airtable Support**: The bot stores information in Airtable, including tracking threads, managing locks, and managing file uploads.
+  - **Tracked Threads**: The bot maintains a record of active threads in a Discord server, allowing it to track ongoing discussions or projects effectively.
+  - **Thread Locks**: Airtable is used to manage thread locks, which helps prevent multiple users from overwhelming the bot by making requests at the same time in the same thread. By locking a thread, the bot ensures that only one request is processed at a time, making interactions smoother and more orderly.
+  - **File Uploads**: The bot extracts useful information from uploaded files, such as documents and spreadsheets, and saves this data into a vector store unique to the channel or thread. This allows for easy access in the future, while keeping information organized and ensuring that all relevant content is available within the proper context. The vector store helps maintain a structured way to retrieve and use the information when needed.
+- **Function Calling**: The bot also comes with a couple dozen pre-made function calls ready for use, including features like Google search, weather information retrieval, DALL-E 3 image generation, OpenAI Vision for image analysis, and web page summarization. These function calls can greatly extend the bot's capabilities, but they need to be enabled by providing your own API keys and configuring the relevant services.
 
-## How to Use
+## Dependencies
 
-1. **Configure your Assistant**
-   - Log into the OpenAI platform and create a new assistant and configure it with your preferred model, instructions, and other options.
-   - Obtain the `Assistant ID` from the assistant settings and include it in the environment variables as `OPENAI_ASSISTANTID`.
-
-2. **Starting the Bot:**
-   - Ensure all necessary dependencies are installed by running `npm install openai discord.js dotenv airtable`
-   - Start the bot with `node index.js` (assuming your main file is named `index.js`).
-   - Recommend using tmux to keep the bot running in the background
-
-3. **Interacting with the Bot:**
-   - The bot listens for direct mentions in a Discord server.
-   - Once mentioned, it processes the message and uses OpenAI's capabilities to generate a response based on the content.
-   - The bot can handle messages sequentially by locking threads to manage multiple interactions concurrently.
-
-4. **Handling Errors and Outputs:**
-   - The bot handles errors gracefully by notifying the user of any issues encountered during the interaction.
-   - Responses from the bot are split as needed to fit Discord's message length constraints. 
-
-## Environment Variables
-
-To function correctly, the app requires the following environment variables to be set:
-
-- `DISCORD_TOKEN`: The token for the Discord bot, used to authenticate and connect to the Discord API.
-- `AIRTABLE_APIKEY`: The API key for accessing Airtable, used to read and write data to your base.
-- `AIRTABLE_BASE`: The ID of your Airtable base, which stores data such as thread identifiers and locks.
-- `OPENAI_APIKEY`: The API key for OpenAI, enabling the bot to send requests to OpenAI's services.
-- `OPENAI_ASSISTANTID`: The specific Assistant ID to use with OpenAI, directing requests to the correct model or assistant.
-
-## Additional Notes
-
-- Ensure all tokens and keys are kept secure and not hardcoded in your source files.
-- The bot's functionality can be extended or modified based on specific needs or additional features provided by Discord, Airtable, and OpenAI.
-
-This README aims to provide a comprehensive guide to setting up and using the bot effectively. For further customizations or troubleshooting, refer to the documentation of each service respectively.
+- **discord.js**: A popular library used to easily interact with the Discord API. It allows developers to build bots that can connect to Discord servers, send and receive messages, and handle events like user interactions.
+- **dotenv**: A module that loads environment variables from a `.env` file into `process.env`. This makes it easier to manage sensitive configuration data, like API keys, without hardcoding them directly in the code.
+- **airtable**: A client library for connecting to Airtable's API. Airtable is a service that combines the simplicity of a spreadsheet with the power of a database, and this library makes it easy to interact with and manipulate Airtable records programmatically.
+- **openai**: A library that provides access to OpenAI's API, allowing developers to interact with various AI models, including those for natural language understanding and response generation. This helps create more dynamic, conversational bots.
+- **axios**: A popular promise-based HTTP client used for making requests to external APIs. It is known for its simplicity and flexibility in handling HTTP methods, and is often used for connecting with third-party services.

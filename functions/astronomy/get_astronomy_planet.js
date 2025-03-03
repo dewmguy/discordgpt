@@ -5,10 +5,9 @@ const { function_coords } = require('../function_coords');
 const { function_elevation } = require('../function_elevation');
 
 const get_astronomy_planet = async ({ bodyName, location, time, date, old_date }) => {
-  console.log("get_astronomy_planet function was called");
-  console.log(`retrieving position data for ${bodyName}`);
-
   try {
+    //console.log("get_astronomy_planet function was called");
+    //console.log(`retrieving position data for ${bodyName}`);
     const coordinates = await function_coords({ location });
     if (coordinates.error) throw new Error(coordinates.error);
     const { latitude, longitude } = coordinates;
@@ -21,11 +20,11 @@ const get_astronomy_planet = async ({ bodyName, location, time, date, old_date }
     };
 
     const response = await axios.request(config);
-    console.log(response.data);
+    //console.log(response.data);
     return response.data;
   }
   catch (error) {
-    console.error("Error in get_astronomy_planet:", error);
+    console.error("[get_astronomy_planet]:", error);
     return { error: error.message };
   }
 }

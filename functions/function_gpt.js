@@ -15,7 +15,7 @@ const function_gpt = async (directive, data) => {
 		});
     const response = completion.choices[0]?.message?.content;
 		console.log(`the response was: ${response}`);
-		return response;
+		return { response: response || 'Error: No valid response from OpenAI' };
 	}
   catch (error) {
     console.error("Error in function_gpt:", error);

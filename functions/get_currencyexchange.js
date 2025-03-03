@@ -3,9 +3,9 @@
 const fetch = require('node-fetch');
 
 const get_currencyexchange = async ({ currencyFrom, currencyTo, amount }) => {
-  console.log("get_currencyexchange function was called");
-  console.log(`converting ${amount} from ${currencyFrom} to ${currencyTo}`);
   try {
+    //console.log("get_currencyexchange function was called");
+    //console.log(`converting ${amount} from ${currencyFrom} to ${currencyTo}`);
     const url = `https://currency-conversion-and-exchange-rates.p.rapidapi.com/convert?from=${currencyFrom}&to=${currencyTo}&amount=${amount}`;
     const options = {
       method: 'GET',
@@ -16,11 +16,11 @@ const get_currencyexchange = async ({ currencyFrom, currencyTo, amount }) => {
     };
     const response = await fetch(url, options);
     const result = await response.text();
-    console.log(result);
+    //console.log(result);
     return result;
   }
   catch (error) {
-    console.error("Error in get_currencyexchange:", error);
+    console.error("[get_currencyexchange]:", error);
     return { error: error.message };
   }
 }
@@ -30,7 +30,7 @@ module.exports = { get_currencyexchange };
 /*
 {
   "name": "get_currencyexchange",
-  "description": "Retrieves currency exchange rates from the Currency Exchange API. Useful when asked about the difference in value between two currencies.",
+  "description": "Retrieves exchange rates from the Currency Exchange API. Useful when asked about the difference in value between two currencies.",
   "parameters": {
     "type": "object",
     "properties": {

@@ -3,8 +3,8 @@
 const fetch = require('node-fetch');
 
 const get_factcheck = async ({ query }) => {
-  console.log("get_factcheck function was called");
   try {
+    //console.log("get_factcheck function was called");
     const url = `https://fact-checker.p.rapidapi.com/search?query=${encodeURIComponent(query)}&limit=5`;
     const options = {
       method: 'GET',
@@ -16,11 +16,11 @@ const get_factcheck = async ({ query }) => {
     const response = await fetch(url, options);
     const result = await response.text();
     if(!result) { return `There are no results to confirm nor deny the statement: ${query}`; }
-    console.log(result);
+    //console.log(result);
     return result;
   }
   catch (error) {
-    console.error("Error in get_factcheck:", error);
+    console.error("[get_factcheck]:", error);
     return { error: error.message };
   }
 }
@@ -30,7 +30,7 @@ module.exports = { get_factcheck };
 /*
 {
   "name": "get_factcheck",
-  "description": "Retrieves information to confirm or deny the factuality of statements. Useful if asked about the validity of a statement or if a user says something questionable that you want to validate before you respond.",
+  "description": "Retrieves data from Fact Check API. Useful to confirm or deny the factuality of potentially controversial statements or allegations made by a user.",
   "parameters": {
     "type": "object",
     "properties": {

@@ -3,7 +3,7 @@
 const fetch = require('node-fetch');
 
 const get_rent = async ({ location, diameter = 0.5, property, beds, baths, sqftMin, sqftMax }) => {
-  console.log("get_rent function was called");
+  //console.log("get_rent function was called");
 
   const searchParams = {
     address: location,
@@ -50,7 +50,7 @@ const get_rent = async ({ location, diameter = 0.5, property, beds, baths, sqftM
     return { searchParams, result };
   }
   catch (error) {
-    console.error("Error in get_rent:", error);
+    console.error("[get_rent]:", error);
     return { error: error.message };
   }
 }
@@ -60,7 +60,7 @@ module.exports = { get_rent };
 /*
 {
   "name": "get_rent",
-  "description": "Retrieves statistical rent data from Zillow API. Useful when asked about the average rent costs in a particular area.",
+  "description": "Retrieves statistical rent data from Zillow API. Useful when asked about the average rent costs in an area.",
   "parameters": {
     "type": "object",
     "properties": {
@@ -75,7 +75,13 @@ module.exports = { get_rent };
       "property": {
         "type": "string",
         "description": "The type of property for rent. Optional.",
-        "enum": ["Apartment", "Condo", "MultiFamily", "SingleFamily", "Townhouse"],
+        "enum": [
+          "Apartment",
+          "Condo",
+          "MultiFamily",
+          "SingleFamily",
+          "Townhouse"
+        ],
         "default": "SingleFamily"
       },
       "beds": {

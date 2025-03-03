@@ -6,10 +6,9 @@ const TurndownService = require('turndown');
 const turndownService = new TurndownService();
 
 const function_article = async ({ url, directive }) => {
-  console.log("function_article function was called");
-  console.log(`pulling data from article ${url}`);
   try {
-    
+    //console.log("function_article function was called");
+    //console.log(`pulling data from article ${url}`);
     const link = `https://article-extractor2.p.rapidapi.com/article/parse?url=${encodeURIComponent(url)}`;
     const options = {
       method: 'GET',
@@ -20,12 +19,12 @@ const function_article = async ({ url, directive }) => {
     };
     const response = await fetch(link, options);
     const data = await response.text();
-    markdown = await turndownService.turndown(data);
+    const markdown = await turndownService.turndown(data);
     const summary = await function_gpt(directive,markdown);
     return summary;
   }
   catch (error) {
-    console.error("Error in function_article:", error);
+    //console.error("Error in function_article:", error);
     return { error: error.message };
   }
 }

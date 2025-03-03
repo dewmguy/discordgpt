@@ -4,12 +4,12 @@ const fetch = require('node-fetch');
 const { get_weather_today } = require('./weather/get_weather_today');
 
 const get_flight = async ({ flightICAO }) => {
-  console.log("get_flight function was called");
+  //console.log("get_flight function was called");
   try {
     if (!flightICAO) { throw new Error('Function Call formatting failure. Please ensure the flight ICAO number is provided.'); }
     
     const url = `https://aerodatabox.p.rapidapi.com/flights/number/${flightICAO}`;
-    console.log(url);
+    //console.log(url);
     
     const options = {
       method: 'GET',
@@ -23,15 +23,15 @@ const get_flight = async ({ flightICAO }) => {
     if (!response.ok) { throw new Error('API Call Failure.'); }
     const result = await response.json();
     if (!result) { return 'There were no results provided by the API.'; }
-    console.log(result);
+    //console.log(result);
 
     const flightData = result[0];
 
     // Extract relevant times
     const departureTime = new Date(flightData.departure.scheduledTime.local).getHours();
-    console.log(departureTime);
+    //console.log(departureTime);
     const arrivalTime = new Date(flightData.arrival.scheduledTime.local).getHours();
-    console.log(arrivalTime);
+    //console.log(arrivalTime);
 
     // Fetch weather data for departure and arrival locations
     const weatherDeparture = await get_weather_today({
@@ -71,10 +71,11 @@ const get_flight = async ({ flightICAO }) => {
       flightDistance: flightData.greatCircleDistance.mile
     };
 
-    console.log(remappedData);
+    //console.log(remappedData);
     return remappedData;
-  } catch (error) {
-    console.error("Error in get_flight:", error);
+  }
+  catch (error) {
+    console.error("[get_flight]:", error);
     return { error: error.message };
   }
 }
@@ -84,13 +85,13 @@ module.exports = { get_flight };
 /*
 {
   "name": "get_flight",
-  "description": "Retrieves complete real-time flight status data from Aviation Stack API. Write output in the style of an airline captain speaking over the intercom. Convert dates and times into human-friendly readable format.",
+  "description": "Retrieves flight data from Aviation Stack API. Useful when asked about the status of a flight. Convert all UTC to relative times i.e. 5 minutes ago. Convert all military times to standard times. Write your response in the style of an airline captain giving a report over the intercom.",
   "parameters": {
     "type": "object",
     "properties": {
       "flightICAO": {
         "type": "string",
-        "description": "The Flight ICAO identifier of the flight. (e.g. The Flight ICAO for 'South West flight 1234' is SWA1234.)"
+        "description": "The Flight ICAO identifier of the flight. (e.g. SWA1234)"
       }
     },
     "required": [

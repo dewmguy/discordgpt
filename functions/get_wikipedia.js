@@ -5,10 +5,9 @@ const { function_article } = require('./function_article');
 const fetch = require('node-fetch');
 
 const get_wikipedia = async ({ query }) => {
-  console.log("get_wikipedia was called");
-  console.log(`query: "${query}"`);
-
   try {
+    //console.log("get_wikipedia was called");
+    //console.log(`query: "${query}"`);
     query = `wikipedia ${query}`;
     const searchType = 'web';
     const searchResults = await function_search({ query, searchType });
@@ -44,7 +43,7 @@ const get_wikipedia = async ({ query }) => {
     else { throw new Error("There is something wrong with the response from Wikipedia."); }
   }
   catch (error) {
-    console.error("Error in get_wikipedia:", error);
+    console.error("[get_wikipedia]:", error);
     return { error: error.message };
   }
 };
@@ -54,7 +53,7 @@ module.exports = { get_wikipedia };
 /*
 {
   "name": "get_wikipedia",
-  "description": "Retrieve article summaries about any topic from Wikipedia. Useful when asked about anything that may require in-depth information.",
+  "description": "Retrieves articles from Wikipedia. Useful when asked about retrieving information for a specific topic in a search or for research.",
   "parameters": {
     "type": "object",
     "properties": {

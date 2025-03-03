@@ -5,7 +5,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_APIKEY });
 
 const get_vision = async ({ prompt, imageURLs }) => {
   try {
-    console.log(`get_vision function was called`);
+    //console.log(`get_vision function was called`);
 
     const content = [
       { type: "text", text: prompt },
@@ -23,7 +23,7 @@ const get_vision = async ({ prompt, imageURLs }) => {
     return result;
   }
   catch (error) {
-    console.error("Error in get_vision:", error);
+    console.error("[get_vision]:", error);
     return { error: error.message };
   }
 };
@@ -33,7 +33,7 @@ module.exports = { get_vision };
 /* function call
 {
   "name": "get_vision",
-  "description": "Retrieve image analysis from the most recent ChatGPT Vision API. Useful when asked about the contents of an image.",
+  "description": "Retrieves image analysis from ChatGPT Vision API. Useful when asked about the contents of an image.",
   "parameters": {
     "type": "object",
     "properties": {

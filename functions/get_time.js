@@ -3,7 +3,7 @@
 const fetch = require('node-fetch');
 
 const get_time = async ({ area, location, region }) => {
-  console.log("get_time function was called");
+  //console.log("get_time function was called");
   try {
     if(!region) { region = ''; }
     const url = `http://worldtimeapi.org/api/timezone/${area}/${location}/${region}`;
@@ -31,7 +31,7 @@ const get_time = async ({ area, location, region }) => {
     }
   }
   catch (error) {
-    console.error("Error in get_time:", error);
+    console.error("[get_time]:", error);
     return { error: error.message };
   }
 };
@@ -41,14 +41,32 @@ module.exports = { get_time };
 /*
 {
   "name": "get_time",
-  "description": "Retrieve current time data from the World Time API. Useful when asked about the time in any location.",
+  "description": "Retrieves time data from the World Time API. Useful when asked about the time in any location.",
   "parameters": {
     "type": "object",
     "properties": {
       "area": {
         "type": "string",
         "description": "The timezone area; continent or a generic area name.",
-        "enum": ["Africa", "America", "Antarctica", "Asia", "Atlantic", "Australia", "Europe", "Indian", "Pacific", "CET", "EET", "EST", "ETC", "HST", "MET", "MST", "WET"]
+        "enum": [
+          "Africa",
+          "America",
+          "Antarctica",
+          "Asia",
+          "Atlantic",
+          "Australia",
+          "Europe",
+          "Indian",
+          "Pacific",
+          "CET",
+          "EET",
+          "EST",
+          "ETC",
+          "HST",
+          "MET",
+          "MST",
+          "WET"
+        ]
       },
       "location": {
         "type": "string",
@@ -59,7 +77,10 @@ module.exports = { get_time };
         "description": "The time zone region. The city name for the exceptions in the location parameter."
       }
     },
-    "required": ["area", "location"]
+    "required": [
+      "area",
+      "location"
+    ]
   }
 }
 */

@@ -6,17 +6,16 @@ const { function_elevation } = require('../function_elevation');
 const { function_astronomy_search } = require('./function_astronomy_search');
 
 const get_astronomy_chart = async ({ bodyName, location, date }) => {
-  console.log("get_astronomy_chart function was called");
-  console.log(`creating a star chart for ${bodyName}`);
-
   try {
+    //console.log("get_astronomy_chart function was called");
+    //console.log(`creating a star chart for ${bodyName}`);
     const coordinates = await function_coords({ location });
     if (coordinates.error) throw new Error(coordinates.error);
     const { latitude, longitude } = coordinates;
     const elevation = await function_elevation({ latitude, longitude });
 
     const constID = await function_astronomy_search(bodyName, 'constellation', 1);
-    console.log(`searched for ${bodyName} and recovered ${constID}`);
+    //console.log(`searched for ${bodyName} and recovered ${constID}`);
 
     const config = {
       method: 'post',
@@ -39,11 +38,11 @@ const get_astronomy_chart = async ({ bodyName, location, date }) => {
     };
 
     const response = await axios.request(config);
-    console.log(response.data);
+    //console.log(response.data);
     return response.data.data.imageUrl;
   }
   catch (error) {
-    console.error("Error in get_astronomy_chart:", error);
+    console.error("[get_astronomy_chart]:", error);
     return { error: error.message };
   }
 }

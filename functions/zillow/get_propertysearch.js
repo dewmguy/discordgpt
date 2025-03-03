@@ -3,9 +3,8 @@
 const fetch = require('node-fetch');
 
 const get_propertysearch = async ({ location, status_type, home_type, sort, minPrice, maxPrice, bathsMin, bathsMax, bedsMin, bedsMax, sqftMin, sqftMax, buildYearMin, buildYearMax, isBasementUnfinished, isNewConstruction, lotSizeMin, lotSizeMax, hasAirConditioning, hasGarage }) => {
-  console.log("get_propertysearch function was called");
-
   try {
+    //console.log("get_propertysearch function was called");
     let link = `https://zillow-com1.p.rapidapi.com/rentEstimate?`;
 
     const queryParams = [
@@ -71,7 +70,7 @@ const get_propertysearch = async ({ location, status_type, home_type, sort, minP
     };
   }
   catch (error) {
-    console.error("Error in get_propertysearch:", error);
+    console.error("[get_propertysearch]:", error);
     return { error: error.message };
   }
 }
@@ -81,7 +80,7 @@ module.exports = { get_propertysearch };
 /*
 {
   "name": "get_propertysearch",
-  "description": "Retrieves a list of properties near a location from Zillow API. Useful when asked for availability or prices of homes for rent or sale near a particular area.",
+  "description": "Retrieves property results from Zillow API. Useful when asked for availability or prices of homes for rent or sale near a particular area.",
   "parameters": {
     "type": "object",
     "properties": {
@@ -92,19 +91,38 @@ module.exports = { get_propertysearch };
       "status_type": {
         "type": "string",
         "description": "The status of the property (e.g., ForSale, ForRent). Optional.",
-        "enum": ["ForSale", "ForRent"],
+        "enum": [
+          "ForSale",
+          "ForRent"
+        ],
         "default": "ForSale"
       },
       "home_type": {
         "type": "string",
         "description": "The type of home for the specified status_type. Optional.",
-        "enum": ["Townhomes", "Houses", "Apartments_Condos_Co-ops", "Multi-family", "Apartments", "Houses", "Manufactured", "Condos", "LotsLand", "Townhomes"],
+        "enum": [
+          "Townhomes",
+          "Houses",
+          "Apartments_Condos_Co-ops",
+          "Multi-family",
+          "Apartments",
+          "Houses",
+          "Manufactured",
+          "Condos",
+          "LotsLand",
+          "Townhomes"
+        ],
         "default": "Houses"
       },
       "sort": {
         "type": "string",
         "description": "Sort order for the results. Optional.",
-        "enum": ["Price_High_Low", "Price_Low_High", "Newest", "Square_Feet"],
+        "enum": [
+          "Price_High_Low",
+          "Price_Low_High",
+          "Newest",
+          "Square_Feet"
+        ],
         "default": "Price_Low_High"
       },
       "minPrice": {
@@ -158,12 +176,44 @@ module.exports = { get_propertysearch };
       "lotSizeMin": {
         "type": "string",
         "description": "The minimum lot size in square feet. Optional.",
-        "enum": ["1000", "2000", "3000", "4000", "5000", "7500", "10890", "21780", "43560", "87120", "217800", "435600", "871200", "2178000", "4356000"]
+        "enum": [
+          "1000",
+          "2000",
+          "3000",
+          "4000",
+          "5000",
+          "7500",
+          "10890",
+          "21780",
+          "43560",
+          "87120",
+          "217800",
+          "435600",
+          "871200",
+          "2178000",
+          "4356000"
+        ]
       },
       "lotSizeMax": {
         "type": "string",
         "description": "The maximum lot size in square feet. Optional.",
-        "enum": ["1000", "2000", "3000", "4000", "5000", "7500", "10890", "21780", "43560", "87120", "217800", "435600", "871200", "2178000", "4356000"]
+        "enum": [
+          "1000",
+          "2000",
+          "3000",
+          "4000",
+          "5000",
+          "7500",
+          "10890",
+          "21780",
+          "43560",
+          "87120",
+          "217800",
+          "435600",
+          "871200",
+          "2178000",
+          "4356000"
+        ]
       },
       "hasAirConditioning": {
         "type": "boolean",

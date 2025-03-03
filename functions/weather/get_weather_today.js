@@ -5,22 +5,24 @@ const { function_coords } = require('../function_coords');
 const OPENWEATHER_APIKEY = process.env.OPENWEATHER_APIKEY;
 
 const get_weather_today = async ({ location, start, end }) => {
-  console.log("get_weather_today was called");
   try {
-    console.log(`getting weather data for ${location} from ${start} to ${end}`);
-
-    console.log(`getting coordinates for ${location}`);
+    //console.log("get_weather_today was called");
+    //console.log(`getting weather data for ${location} from ${start} to ${end}`);
+    //console.log(`getting coordinates for ${location}`);
     let coordinates = await function_coords({ location });
     if (coordinates.error) throw new Error(coordinates.error);
     let { latitude, longitude } = coordinates;
 
     let excluded = "alerts,current,minutely,daily";
-    // includes hourly
+    // includes: hourly
 
     const weatherUrl = `https://api.openweathermap.org/data/3.0/onecall?lat=${latitude}&lon=${longitude}&exclude=${excluded}&units=imperial&appid=${OPENWEATHER_APIKEY}`;
     const response = await fetch(weatherUrl);
     const weatherData = await response.json();
     //console.log(weatherData);
+    
+    let weatherAlert = {};
+    if(weatherData.alerts) { weatherAlert = weatherData.alerts; }
 
     const now = new Date();
     const currentHour = now.getHours();
@@ -37,11 +39,14 @@ const get_weather_today = async ({ location, start, end }) => {
 
     const filteredHourly = weatherData.hourly.filter(hourData => { return hourData.dt >= startTimestamp && hourData.dt <= endTimestamp; });
 
-    console.log(filteredHourly);
-    return filteredHourly;
+    //console.log(filteredHourly);
+    return {
+      alerts: weatherAlert,
+      filteredHourly
+    };
   }
   catch (error) {
-    console.error("Error in get_weather_today:", error);
+    console.error("[get_weather_today]:", error);
     return { error: error.message };
   }
 };
@@ -51,7 +56,7 @@ module.exports = { get_weather_today };
 /*
 {
   "name": "get_weather_today",
-  "description": "Retrieves 48 hours of weather data from OpenWeather API. Useful when asked about what weather will be like throughout the day. Write output in the style of a weather report from a meteorologist, keep the info relevant to the request. Round all numerical points of data to the nearest whole digit.",
+  "description": "Retrieves weather data from OpenWeather API. Useful when asked about what weather will be like throughout the next 48 hours. Write your response in the style of a meteoroligist weather report, refine the information based on the user request. Round all numerical points of data to the nearest whole digit.",
   "parameters": {
     "type": "object",
     "properties": {

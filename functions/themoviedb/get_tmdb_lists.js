@@ -12,14 +12,14 @@ const options = {
 
 const get_tmdb_lists = async ({ mediaType, listType }) => {
   try {
-    console.log("get_tmdb_lists function was called");
+    //console.log("get_tmdb_lists function was called");
 
     const baseUrl = 'https://api.themoviedb.org/3';
     const langUrl = 'language=en-US';
     const url = listType === 'trending' 
       ? `${baseUrl}/${listType}/${mediaType}/week?${langUrl}` 
       : `${baseUrl}/${mediaType}/${listType}?${langUrl}&page=1`;
-    console.log(url);
+    //console.log(url);
 
     const result = await function_fetch(url, options);
     let results;
@@ -35,11 +35,10 @@ const get_tmdb_lists = async ({ mediaType, listType }) => {
       }))
       .sort((a, b) => b.popularity - a.popularity) // descending
       .slice(0, 10);
-
     return results;
   }
   catch (error) {
-    console.error("Error in get_tmdb_lists:", error);
+    console.error("[get_tmdb_lists]:", error);
     return { error: error.message };
   }
 }
@@ -56,15 +55,27 @@ module.exports = { get_tmdb_lists };
       "mediaType": {
         "type": "string",
         "description": "The type of media to retrieve.",
-        "enum": ["movie", "tv"]
+        "enum": [
+          "movie",
+          "tv"
+        ]
       },
       "listType": {
         "type": "string",
         "description": "The type of list to retrieve. 'nowPlaying' and 'upcoming' are movie only lists.",
-        "enum": ["now_playing", "popular", "top_rated", "upcoming", "trending"]
+        "enum": [
+          "now_playing",
+          "popular",
+          "top_rated",
+          "upcoming",
+          "trending"
+        ]
       }
     },
-    "required": ["mediaType", "listType"]
+    "required": [
+      "mediaType",
+      "listType"
+    ]
   }
 }
 */

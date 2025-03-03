@@ -13,7 +13,7 @@ const options = {
 
 const get_tmdb_movie = async ({ id, query, year, credits, member, position }) => {
   try {
-    console.log("get_tmdb_movie function was called");
+    //console.log("get_tmdb_movie function was called");
 
     if (!id && !query) { throw new Error('Either id or query must be provided'); }
 
@@ -23,12 +23,12 @@ const get_tmdb_movie = async ({ id, query, year, credits, member, position }) =>
     let movieID = id || await function_tmdb_search(endpoint, query, year, options);
     url += `${movieID}/credits?language=en-US`;
 
-    console.log(url);
+    //console.log(url);
     const result = await function_fetch(url, options);
     if(!result) { throw new Error(`Something is wrong with the API call`); }
     let results;
 
-    console.log(`retrieving ${credits} credits`);
+    //console.log(`retrieving ${credits} credits`);
     if (credits === 'cast') {
       results = result.cast
         .filter(item => {
@@ -60,11 +60,10 @@ const get_tmdb_movie = async ({ id, query, year, credits, member, position }) =>
         .sort((a, b) => b.popularity - a.popularity) // descending
         .slice(0, 10);
     }
-
     return results;
   }
   catch (error) {
-    console.error("Error in get_tmdb_movie:", error);
+    console.error("[get_tmdb_movie]:", error);
     return { error: error.message };
   }
 }
@@ -93,7 +92,10 @@ module.exports = { get_tmdb_movie };
       "credits": {
         "type": "string",
         "description": "The category of credits to retrieve.",
-        "enum": ["cast","crew"]
+        "enum": [
+          "cast",
+          "crew"
+        ]
       },
       "member": {
         "type": "string",

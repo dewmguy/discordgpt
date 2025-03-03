@@ -3,9 +3,8 @@
 const fetch = require('node-fetch');
 
 const get_propertyvalue = async ({ location }) => {
-  console.log("get_propertyvalue function was called");
-
   try {
+    //console.log("get_propertyvalue function was called");
     let link = `https://zillow-com1.p.rapidapi.com/zestimate?address=${encodeURIComponent(location)}`;
 
     const options = {
@@ -22,7 +21,7 @@ const get_propertyvalue = async ({ location }) => {
     return result;
   }
   catch (error) {
-    console.error("Error in get_propertyvalue:", error);
+    console.error("[get_propertyvalue]:", error);
     return { error: error.message };
   }
 }
@@ -32,13 +31,13 @@ module.exports = { get_propertyvalue };
 /*
 {
   "name": "get_propertyvalue",
-  "description": "Retrieves the estimated property value of a given location from Zillow API. Useful when asked about the value of a home or building at a particular address.",
+  "description": "Retrieves property value data from Zillow API. Useful when asked about the value of a home or building at an address.",
   "parameters": {
     "type": "object",
     "properties": {
       "location": {
         "address": "string",
-        "description": "The full address of a home: Street, City, State, Zip."
+        "description": "The full address of the home: Street, City, State, Zip."
       }
     },
     "required": [

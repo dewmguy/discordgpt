@@ -13,14 +13,14 @@ const options = {
 
 const get_tmdb_person = async ({ infoType, id, query, year, startYear }) => {
   try {
-    console.log("get_tmdb_person function was called");
+    //console.log("get_tmdb_person function was called");
 
     if (!id && !query) { throw new Error('Either id or query must be provided'); }
 
     const endpoint = 'person';
     let url = `https://api.themoviedb.org/3/${endpoint}/`;
     const personID = id || await function_tmdb_search(endpoint, query, null, options);
-    console.log(url);
+    //console.log(url);
 
     switch (infoType) {
       case 'details':
@@ -34,7 +34,7 @@ const get_tmdb_person = async ({ infoType, id, query, year, startYear }) => {
         throw new Error('Invalid infoType provided');
     }
     
-    console.log(url);
+    //console.log(url);
     const result = await function_fetch(url, options);
     let results;
 
@@ -89,11 +89,10 @@ const get_tmdb_person = async ({ infoType, id, query, year, startYear }) => {
         .sort((a, b) => b.popularity - a.popularity) // descending
         .slice(0, 10);
     }
-
     return results;
   }
   catch (error) {
-    console.error("Error in get_tmdb_person:", error);
+    console.error("[get_tmdb_person]:", error);
     return { error: error.message };
   }
 }
@@ -103,7 +102,7 @@ module.exports = { get_tmdb_person };
 /*
 {
   "name": "get_tmdb_person",
-  "description": "Retrieves data from The Movie Database API. Useful when asked about people, cast, or crew and the movies or tv shows they have worked on.",
+  "description": "Retrieves data from The Movie Database API. Useful when asked about cast or crew and the movies or tv shows they have worked on.",
   "parameters": {
     "type": "object",
     "properties": {

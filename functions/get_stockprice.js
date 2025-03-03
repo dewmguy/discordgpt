@@ -3,8 +3,8 @@
 const fetch = require('node-fetch');
 
 const get_stockprice = async ({ ticker }) => {
-  console.log("get_stockprice function was called");
-  console.log(`Fetching stock price for ${ticker}`);
+  //console.log("get_stockprice function was called");
+  //console.log(`Fetching stock price for ${ticker}`);
   
   const url = `https://api.polygon.io/v2/aggs/ticker/${ticker}/prev?adjusted=true&apiKey=${process.env.STOCKMARKETAPI_APIKEY}`;
 
@@ -29,7 +29,7 @@ const get_stockprice = async ({ ticker }) => {
     return stockData;
   }
   catch (error) {
-    console.error("Error in get_stockprice:", error);
+    console.error("[get_stockprice]:", error);
     return { error: error.message };
   }
 };
@@ -39,7 +39,7 @@ module.exports = { get_stockprice };
 /*
 {
   "name": "get_stockprice",
-  "description": "Retrieves the previous trading day close values of stock data from the Stock Market API. Useful when asked about a stock.",
+  "description": "Retrieves stock data from the Stock Market API. Useful when asked about the value of a stock.",
   "parameters": {
     "type": "object",
     "properties": {

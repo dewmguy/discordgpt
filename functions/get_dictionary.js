@@ -3,7 +3,7 @@
 const fetch = require('node-fetch');
 
 const get_dictionary = async ({ word }) => {
-  console.log("get_dictionary function was called");
+  //console.log("get_dictionary function was called");
   try {
     const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
     const response = await fetch(url);
@@ -13,7 +13,7 @@ const get_dictionary = async ({ word }) => {
     return result;
   }
   catch (error) {
-    console.error("Error in get_dictionary:", error);
+    console.error("[get_dictionary]:", error);
     return { error: error.message };
   }
 }
@@ -23,7 +23,7 @@ module.exports = { get_dictionary };
 /*
 {
   "name": "get_dictionary",
-  "description": "Retrieve accurate defintions of words from the FreeDictionary API. Useful when asked about word meanings, origins, synonyms, or antonyms.",
+  "description": "Retrieves defintions from the FreeDictionary API. Useful when asked about word meanings, origins, synonyms, or antonyms.",
   "parameters": {
     "type": "object",
     "properties": {

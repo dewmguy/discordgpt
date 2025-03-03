@@ -85,7 +85,7 @@ async function prepMessage(event, content) {
   content = content.replace(/!?(\[([^\]]+)\]\(([^)<]+)\))/g, (match, p0, p1, p2) => `[${p1}](<${p2}>)`);
   const splitContent = await splitMessage(content);
   for (const message of splitContent) {
-    await sleep(500);
+    await sleep(100);
     await sendMessage(event, message);
   }
 }
@@ -185,17 +185,33 @@ async function acquireThreadLock(event, threadId) {
   catch (error) { await handleError(event, error); return null; }
 }
 
-async function saveThread(event, channel, threadID, store) {
+async function saveThread(event, channel, threadID) {
   console.log(`saving ${threadID} to database`);
   try {
     await base(airtable_table).create({
       'DiscordThreadId': channel,
-      'OpenAiThreadId': threadID,
-      'OpenAiStoreId': store
+      'OpenAiThreadId': threadID
     });
     console.log(`${threadID} saved to database`);
   }
   catch (error) { await handleError(event, error); return null; }
+}
+
+async function updateThread(event, channel, store) {
+  console.log(`updating vector store ID for ${channel} in database`);
+  try {
+    const records = await base(airtable_table).select({ filterByFormula: `{DiscordThreadId} = "${channel}"` }).firstPage();
+    if (records.length > 0) {
+      const recordId = records[0].id;
+      await base(airtable_table).update(recordId, {
+        'OpenAiStoreId': store
+      });
+      console.log(`Updated vector store ID (${store}) for thread ${channel}`);
+    } else {
+      console.log(`No existing thread found for channel ${channel}, unable to update vector store ID`);
+    }
+  }
+  catch (error) { await handleError(event, error); }
 }
 
 async function createVectorStore(event, threadID) {
@@ -218,6 +234,19 @@ async function createThread(event, channel) {
   catch (error) { await handleError(event, error); return null; }
 }
 
+async function prepNewStore(event, channel, threadID) {
+  console.log(`Preparing vector store for channel ${channel}`);
+  try {
+    const storeID = await createVectorStore(event, threadID);
+    await updateThread(event, channel, storeID);
+    return storeID;
+  }
+  catch (error) {
+    await handleError(event, error);
+    return null;
+  }
+}
+
 async function getStore(channel) {
   console.log(`retrieving store for channel ${channel}`);
   try {
@@ -232,8 +261,7 @@ async function prepNewThread(event, channel) {
   console.log(`thread does not exist for channel ${channel}`);
   try {
     const threadId = await createThread(event, channel);
-    const vectorStoreId = await createVectorStore(event, threadId);
-    await saveThread(event, channel, threadId, vectorStoreId);
+    await saveThread(event, channel, threadId);
     return threadId;
   }
   catch (error) { await handleError(event, error); return null; }
@@ -258,15 +286,15 @@ async function processMessage(event, channel, message) {
   let theThread, theStore, retries = 180;
   try {
     theThread = await getThread(channel) || await prepNewThread(event, channel);
-    theStore = await getStore(channel);
 
-    while (!(await acquireThreadLock(event, theThread)) && retries > 0) { await sleep(1000); retries--; }
+    while (!(await acquireThreadLock(event, theThread)) && retries > 0) { await sleep(100); retries--; }
     if (retries === 0) { throw new Error("there is an error in this message thread, make a new thread."); }
-    
+
     sendTyping(event.channel);
-    
+
     if (event.attachments.size > 0) {
       console.log(`user uploaded files.`);
+      theStore = await getStore(channel) || await prepNewStore(event, channel, theThread);
 
       const supportedFileTypes = [".c", ".cs", ".cpp", ".doc", ".docx", ".html", ".java", ".json", ".md", ".pdf", ".php", ".pptx", ".py", ".rb", ".tex", ".txt", ".css", ".js", ".sh", ".ts"];
       const imageFileTypes = [".jpg", ".jpeg", ".png", ".webp"];
@@ -353,7 +381,6 @@ async function deleteFiles(threadID) {
 }
 
 async function deleteVectorStore(store) {
-  console.log(`deleting vector store ${store}`);
   await openai.beta.vectorStores.del(store);
   console.log(`vector store ${store} deleted`);
 }
@@ -383,7 +410,7 @@ async function processDeleteThread(channel) {
   try {
     const store = await getStore(channel);
     const threadID = await getThread(channel);
-    await deleteVectorStore(store);
+    if(store) { await deleteVectorStore(store); }
     await deleteThread(channel);
     await deleteLock(threadID);
     await deleteFiles(threadID);
@@ -401,14 +428,14 @@ let keepTyping = true;
 
 //discord thread deleted
 client.on('threadDelete', async event => {
-  console.log(`event delete thread triggered`);
+  //console.log(`event delete thread triggered`);
   await processDeleteThread(event.id);
   console.log(`event delete thread completed`);
 });
 
 //main logic
 client.on('messageCreate', async event => {
-  console.log(`event create message triggered`);
+  //console.log(`event create message triggered`);
   if (event.author.bot || event.content.includes("@here") || event.content.includes("@everyone") || event.content.includes("@skynet") || !event.mentions.has(client.user.id)) { return; }
   let channel = event.channel.id;
   let authorID = event.author.id;
@@ -437,20 +464,3 @@ client.once(Events.ClientReady, botUser => {
 
 //login
 client.login(process.env.DISCORD_TOKEN);
-
-/**
-This is the entry point for the Discord bot.
-
-The bot is initiated by calling `client.login(process.env.DISCORD_TOKEN)`, which authenticates the bot with the Discord API using the `DISCORD_TOKEN` environment variable.
-
-The bot registers two event listeners:
-
-- `threadDelete`: This event is triggered when a thread is deleted. It calls the `processDeleteThread` function to handle the deletion.
-- `messageCreate`: This event is triggered when a message is created. It checks if the message is a valid user message by checking various conditions. If the message is valid, it injects the user's ID and timestamp into the message, sends a typing indicator while processing the message, and calls the `processMessage` function to handle the message.
-
-The bot also has a `ClientReady` event listener that updates the bot's status to "online" and logs a message indicating that the bot is online.
-
-The `keepTyping` variable is used to keep track of whether the bot is currently typing in a channel. This is used to control the sending of typing indicators.
-
-Overall, this code sets up the Discord bot and handles various events and interactions with the Discord API.
-*/

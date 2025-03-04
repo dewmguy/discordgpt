@@ -13,19 +13,22 @@ const options = {
 const get_tmdb_imdb = async ({ imdbURL }) => {
   try {
     //console.log(`[get_tmdb_imdb] Function called`);
-    const regex = /^https?:\/\/(www\.)?imdb\.com\/title\/(tt\d+)(\/|\?|$)/;
+    const regex = /^https?:\/\/(m\.|www\.)?imdb\.com\/title\/(tt\d+)(\/|\?|$)/;
     const match = imdbURL.match(regex);
     if (!match) { throw new Error("Invalid IMDB URL format."); }
     const imdbID = match[2];
     if (!imdbID || !/^tt\d+$/.test(imdbID)) { throw new Error("Invalid IMDb ID format."); }
-    //console.log(`[get_tmdb_imdb] IMDB ID: ${imdbID}`);
+    console.log(`[get_tmdb_imdb] IMDB ID: ${imdbID}`);
     const response = await function_fetch(`https://api.themoviedb.org/3/find/${imdbID}?external_source=imdb_id`, options);
-    if (!response || !response.movie_results || response.movie_results.length === 0) { throw new Error("No movie data found for the provided IMDb ID."); }
-    const movie = response.movie_results[0];
-    const title = movie.title || null;
-    const year = movie.release_date.split('-')[0] || null;
-    if (!title || !year) { throw new Error("Movie title or release year missing from TMDB response."); }
-    return { title, year };
+    if (!response) { throw new Error("No data found for the provided IMDb URL."); }
+    let data = response.movie_results[0] || response.tv_results[0] || null;
+    let media = data?.media_type || null;
+    let title = data?.title || data?.name || null;
+    let year = data?.release_date?.split('-')[0] || null;
+    if (media === "tv" && !title) { throw new Error("TV show title missing from TMDB response."); }
+    if (media === "movie" && (!title && !year)) { throw new Error("Movie title or release year missing from TMDB response."); }
+    if (!media) { throw new Error("Media information missing from TMDB response"); }
+    return { media, title, year };
   }
   catch (error) {
     console.error(`[get_tmdb_imdb] Error:`, error);

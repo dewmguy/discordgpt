@@ -6,28 +6,21 @@ const function_sftp = async ({ filePath }) => {
   try {
     //console.log("[function_sftp] Function called");
     if (!filePath) { throw new Error('Missing filePath parameter'); }
-
     const requiredEnv = ['SFTP_HOST', 'SFTP_PORT', 'SFTP_USER', 'SFTP_PASS', 'SFTP_REMOTEPATH'];
     const missingEnv = requiredEnv.filter(envVar => !process.env[envVar]);
     if (missingEnv.length) { throw new Error(`Missing environment variables: ${missingEnv.join(', ')}`); }
-
     const port = parseInt(process.env.SFTP_PORT, 10);
     if (isNaN(port) || port < 1 || port > 65535) { throw new Error("Invalid SFTP port"); }
-
     const fileStat = await fs.promises.stat(filePath);
     if (!fileStat.isFile()) { throw new Error(`${filePath} is not a valid file.`); }
-
     const remoteDir = process.env.SFTP_REMOTEPATH;
     const remoteFilePath = path.posix.join(remoteDir, path.basename(filePath));
     const localFilePath = path.resolve(filePath);
-
     //console.log(`[function_sftp] Local Path: ${localFilePath}`);
     //console.log(`[function_sftp] Remote Path: ${remoteFilePath}`);
-
     return new Promise((resolve, reject) => {
       const conn = new Client();
       let isRejected = false;
-
       const safeReject = (error) => {
         if (!isRejected) {
           isRejected = true;
@@ -58,7 +51,6 @@ const function_sftp = async ({ filePath }) => {
       });
       conn.on('error', (error) => safeReject(new Error(error)));
       conn.connect({ host: process.env.SFTP_HOST, port: port, username: process.env.SFTP_USER, password: process.env.SFTP_PASS });
-
     });    
   }
   catch (error) {

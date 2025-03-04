@@ -8,21 +8,21 @@ const get_title = async ({ url }) => {
   try {
     //console.log("[get_title] Function called");
     //console.log(`[get_title] Processing: ${url}`);
-
-    const { title, year } = await get_tmdb_imdb({ imdbURL: url });
-    if (!title || !year) { throw new Error("Title extraction failed"); }
-    //console.log(`[get_title] Extracted data: ${title} ${year}`);
-
-    const filePath = await function_puppet({ title, year });
-    if (filePath.error) { throw new Error(filePath.error); }
-    //console.log(`[get_title] File processed at path: ${JSON.stringify(filePath)}`);
-
-    // Upload the file via SFTP
+    const { media, title, year } = await get_tmdb_imdb({ imdbURL: url });
+    console.log(`[get_title] Extracted data: ${title} ${year}`);
+    const filePath = await function_puppet({ media, title, year });
+    if (filePath && filePath.error) {
+      console.error(`[get_title]: ${filePath.error}`);
+      return { error: filePath.error };
+    }
+    console.log(`[get_title] File processed at path: ${JSON.stringify(filePath)}`);
     const sftpResult = await function_sftp({ filePath });
-    if (sftpResult.error) { throw new Error(sftpResult.error); }
-    //console.log("[get_title] File successfully uploaded via SFTP.");
-
-    return `processing complete. Tell the user the "✅ Done." no further output is required.`;
+    if (sftpResult && sftpResult.error) {
+      console.error(`[get_title]: ${sftpResult.error}`);
+      return { error: sftpResult.error };
+    }
+    console.log("[get_title] File successfully uploaded via SFTP.");
+    return `✅ Done.`;
   }
   catch (error) {
     console.error("[get_title]:", error);

@@ -4,14 +4,14 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
-const scan_html = async (page, filter, title, year) => {
+const scan_html = async (page, filter, media, title, year) => {
   try {
     console.log(`[function_puppet] Searching: ${filter} ${title} ${year}`);
 
     const builtUrl = process.env.DL_TEMPLATE.replace(/\${(.*?)}/g, (_, key) => {
       return {
         domain: process.env.DL_DOMAIN,
-        settings: process.env.DL_SETTINGS,
+        settings: media === "movie" ? process.env.DL_MOVIE_SETTINGS : process.env.DL_TV_SETTINGS,
         filter: filter,
         title: title.replace(/[^\w\s]/g,''),
         year: year
@@ -59,12 +59,11 @@ const download_file = async (page, fileUrl) => {
   }
 };
 
-const function_puppet = async ({ title, year }) => {
+const function_puppet = async ({ media, title, year }) => {
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
   try {
     //console.log("[function_puppet] Function Called");
-
     if (process.env.DL_COOKIES) {
       try {
         const cookies = JSON.parse(process.env.DL_COOKIES);
@@ -78,7 +77,8 @@ const function_puppet = async ({ title, year }) => {
       catch (error) { throw new Error(error); }
     }
 
-    const filters = (process.env.DL_FILTERS || '').split(',').map(c => c.trim()).filter(Boolean);
+    const filters = (media === "movie" ? process.env.DL_MOVIE_FILTERS : process.env.DL_TV_FILTERS).split(',').map(c => c.trim()).filter(Boolean);
+    year = year === null ? "" : year;
 
     function sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
@@ -86,17 +86,23 @@ const function_puppet = async ({ title, year }) => {
 
     let link = null;
     for (let filter of filters) {
-      link = await scan_html(page, filter, title, year);
+      link = await scan_html(page, filter, media, title, year);
       if (link && !link.error) {
         console.log(`[function_puppet] Found: ${link}`);
         break;
       }
       else { await sleep(5000); }
     }
-    if (link.error) { throw new Error(link.error); }
-
+    if (!link) { 
+      console.error("[function_puppet]: No results could be found.");
+      return { error: "This movie is not yet available on streaming or bluray." };
+    }
+    if (link && link.error) { 
+      console.error(`[function_puppet]: ${link.error}`);
+      return { error: link.error };
+    }
     const filePath = await download_file(page, link);
-    if (filePath.error) { throw new Error(filePath.error); }
+    if (filePath && filePath.error) { throw new Error(filePath.error); }
     return filePath;
   }
   catch (error) {

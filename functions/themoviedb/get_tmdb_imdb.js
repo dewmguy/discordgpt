@@ -24,10 +24,8 @@ const get_tmdb_imdb = async ({ imdbURL }) => {
     let data = response.movie_results[0] || response.tv_results[0] || null;
     let media = data?.media_type || null;
     let title = data?.title || data?.name || null;
-    let year = data?.release_date?.split('-')[0] || null;
-    if (media === "tv" && !title) { throw new Error("TV show title missing from TMDB response."); }
-    if (media === "movie" && (!title && !year)) { throw new Error("Movie title or release year missing from TMDB response."); }
-    if (!media) { throw new Error("Media information missing from TMDB response"); }
+    let year = data?.release_date?.split('-')[0] || data?.first_air_date?.split('-')[0] || null;
+    if (!media || !title || !year) { throw new Error("Meda format, title, or release year missing from TMDB response."); }
     return { media, title, year };
   }
   catch (error) {
